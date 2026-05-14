@@ -50,7 +50,7 @@ class BenchmarkResult:
         return "\n".join(lines)
 
     @staticmethod
-    def _format_bytes(b: int) -> str:
+    def _format_bytes(b: float) -> str:
         for unit in ("B", "KB", "MB", "GB", "TB"):
             if b < 1024:
                 return f"{b:.1f} {unit}"
@@ -114,7 +114,7 @@ class AdvancedBenchmark:
     def _get_cpu(self) -> float:
         if self._process is not None:
             try:
-                return self._process.cpu_percent()
+                return self._process.cpu_percent()  # type: ignore[no-any-return]
             except (OSError, AttributeError):
                 pass
         return 0.0

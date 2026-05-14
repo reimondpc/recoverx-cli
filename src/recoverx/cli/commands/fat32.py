@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
-
+from typing import List
 
 import typer
 from rich.console import Console
@@ -220,7 +220,7 @@ def _recover_files(
 
     console.print(f"[bold cyan]Recovering {len(targets)} file(s)...[/bold cyan]\n")
 
-    recovered: list[dict] = []
+    recovered: List[dict] = []
 
     for entry in targets:
         result = recovery.recover_deleted_file(entry)

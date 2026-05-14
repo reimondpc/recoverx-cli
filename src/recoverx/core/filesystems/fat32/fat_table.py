@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import struct
+from typing import cast
 
 from recoverx.core.utils.raw_reader import RawReader
 
@@ -39,7 +40,8 @@ def get_next_cluster(reader: RawReader, bpb: FAT32BootSector, cluster: int) -> i
     data = reader.read_at(fat_offset, 4)
     if len(data) < 4:
         return EOC_MAX
-    return struct.unpack_from("<I", data)[0] & 0x0FFFFFFF
+    raw = cast(int, struct.unpack_from("<I", data)[0])
+    return raw & 0x0FFFFFFF
 
 
 def read_cluster_chain(

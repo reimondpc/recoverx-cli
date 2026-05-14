@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.5] - 2026-05-14
+
+### Added
+
+- **GitHub Actions CI/CD** — `ci.yml` (pytest + flake8 + black + isort + mypy + bandit on Python 3.10/3.11/3.12), `release.yml` (tag validation, version check, packaging verification)
+- **Test coverage system** — `pytest-cov` configured for source coverage with terminal/XML/HTML reporting
+- **Fuzz testing framework** — `tests/fuzz/test_fat32_fuzz.py` covers corrupted boot sectors, malformed directory entries, self-referencing FAT loops, bad clusters, random FAT chains, extreme BPB values, zero-size images, and memory safety edge cases
+- **Stress datasets** — `tests/datasets/create_stress_images.py` generates fragmented images (50+ files), deep directories (20 levels), partially overwritten files, FAT self-loops, orphan clusters, and large images
+- **Recovery validation suite** — `tests/validation/test_recovery_quality.py` measures precision, recovery rate, metadata integrity, hash consistency, and subdirectory traversal quality
+- **Advanced logging** — FORENSIC level (15) added for audit-grade recovery trails; thread ID and logger name in file logs
+- **Performance profiler** — `Profiler` context manager with CPU, RAM, and throughput metrics; `profile_operation` decorator for function-level profiling; JSON export
+- **Architecture registries** — `scanner/__init__.py`, `filesystems/__init__.py`, `carving/__init__.py`, `reporting/__init__.py` with register/get/list for future plugin loading
+- **Static analysis** — `mypy` (strict typing checks) and `bandit` (security scanning) configured in `pyproject.toml`
+
+### Changed
+
+- **Logger** — now accepts `console_level` and `file_level` parameters; FORENSIC level (15) for audit trails; enhanced file log format with thread IDs
+- **Validate boot sector** — early return on `sectors_per_cluster == 0` to prevent `ZeroDivisionError` in `total_clusters`
+- **Packaging** — `build` and `twine` added as dev dependencies; wheel and sdist verified clean
+
+### Infrastructure
+
+- 216 total pytest tests (29 new: 21 fuzz, 8 validation, stress dataset generators)
+- Coverage: 81% overall, FAT32 critical modules >88%
+- Version bumped to 0.5.5
+
 ## [0.5.0] - 2026-05-14
 
 ### Added

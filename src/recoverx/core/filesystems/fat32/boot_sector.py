@@ -104,6 +104,10 @@ def validate_boot_sector(bpb: FAT32BootSector) -> list[str]:
     if not bpb.signature_valid:
         issues.append("boot sector signature 0x55AA not found")
 
+    if bpb.sectors_per_cluster == 0:
+        issues.append("sectors_per_cluster is zero, cannot compute total_clusters")
+        return issues
+
     total_clusters = bpb.total_clusters
     if total_clusters < FAT32_MIN_CLUSTERS:
         issues.append(f"too few clusters ({total_clusters}) for FAT32, looks like FAT16/FAT12")

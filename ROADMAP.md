@@ -61,13 +61,22 @@ document — priorities shift based on community feedback and real-world testing
 - [x] **FAT32 CLI** — `recoverx fat32 {info,list,deleted,recover}` with `--json` output
 - [x] **Test image generator** — reproducible FAT32 images with normal/deleted files and subdirectories
 - [x] **187 tests** — black / isort / flake8 clean
-- [ ] ZIP carver — signature `PK\x03\x04`
-- [ ] Office docs — OLE2 (`\xD0\xCF\x11\xE0`) based files (`.doc`, `.xls`, `.ppt`)
-- [ ] Cancellation support — `KeyboardInterrupt` safe‑stop mid‑scan
-- [ ] Resource limits — `--max-memory`, `--max-time` guards
-- [ ] Progress granularity — per-chunk vs per-sector reporting
-- [ ] Enhanced signature registry — offset-based headers, footer-less carving fallback
-- [ ] Auto‑register carvers from a plugin folder
+
+## v0.5.5 — Hardening, QA & Automation ✅
+
+- [x] **GitHub Actions CI/CD** — matrix testing (3.10/3.11/3.12), linting, type checking, security scanning
+- [x] **Test coverage** — `pytest-cov` with 81% overall coverage, terminal/XML/HTML reporting
+- [x] **Fuzz testing** — 21 fuzz tests for FAT32 boot sectors, directories, FAT chains, memory safety
+- [x] **Stress datasets** — fragmented images, deep directories, partial overwrites, FAT loops, orphans
+- [x] **Recovery validation** — precision, recovery rate, metadata integrity, hash consistency
+- [x] **Advanced logging** — FORENSIC level (15), thread IDs, configurable console/file levels
+- [x] **Performance profiler** — `Profiler` context manager with CPU/RAM/throughput, JSON export
+- [x] **Architecture registries** — scanner, filesystem, carver, report registries for plugin loading
+- [x] **Static analysis** — `mypy` type checking (45 files, 0 errors) + `bandit` security scan (0 issues)
+- [x] **Packaging** — wheel + sdist verified, `build` + `twine` in dev deps
+- [x] **216 tests** — flake8 / mypy / bandit clean
+
+## v0.6.0 — Filesystem Awareness 🔜
 
 ## v0.6.0 — Filesystem Awareness 🔜
 

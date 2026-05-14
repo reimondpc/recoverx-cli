@@ -4,11 +4,13 @@
     <strong>Professional file recovery and carving tool for disk images and block devices.</strong>
   </p>
   <p>
-    <img src="https://img.shields.io/badge/python-3.10%2B-blue?logo=python&logoColor=white" alt="Python 3.10+">
-    <img src="https://img.shields.io/badge/pytest-187%20passing-green?logo=pytest" alt="pytest 187 passing">
+    <img src="https://img.shields.io/badge/python-3.10%20|%203.11%20|%203.12-blue?logo=python&logoColor=white" alt="Python 3.10+">
+    <img src="https://img.shields.io/badge/pytest-216%20passing-green?logo=pytest" alt="pytest 216 passing">
+    <img src="https://img.shields.io/badge/coverage-81%25-yellow?logo=codecov" alt="Coverage 81%">
     <img src="https://img.shields.io/badge/code%20style-black-000000?logo=black" alt="Code style: black">
+    <img src="https://img.shields.io/badge/CI-passing-brightgreen?logo=githubactions" alt="CI passing">
     <img src="https://img.shields.io/badge/license-MIT-yellow?logo=open-source-initiative" alt="MIT License">
-    <img src="https://img.shields.io/badge/status-MVP-brightgreen" alt="Status: MVP">
+    <img src="https://img.shields.io/badge/status-stable-brightgreen" alt="Status: Stable">
   </p>
 </div>
 
@@ -47,7 +49,12 @@ signature.
 - **FAT32 filesystem analysis** — boot sector parsing, directory traversal (SFN + LFN), cluster chain reading
 - **FAT32 deleted file recovery** — scan for 0xE5-marked entries, reconstruct cluster chains, recover with SHA-256
 - **FAT32 CLI** — `recoverx fat32 info`, `list`, `deleted`, `recover` with `--json` output
-- **Testing suite** — 187 pytest tests across all core modules
+- **Fuzz testing** — 21 fuzz tests protecting binary parsers against corruption, loops, and malicious input
+- **Recovery validation** — precision, recovery rate, metadata integrity, and hash consistency measurements
+- **CI/CD automation** — GitHub Actions with matrix testing (3.10/3.11/3.12), linting, type checking, security scanning
+- **Static analysis** — `mypy` type checking + `bandit` security scanning
+- **Performance profiling** — `Profiler` context manager with CPU, RAM, throughput metrics, JSON export
+- **Testing suite** — 216 pytest tests across all core modules
 
 ## Installation
 
@@ -176,8 +183,10 @@ recoverx/
 │           ├── reporting/
 │           │   └── json_report.py # JSON forensic report generator
 │           ├── benchmark/
-│           │   └── advanced_benchmark.py # CPU/RAM/throughput metrics
+│           │   ├── advanced_benchmark.py # CPU/RAM/throughput metrics
+│           │   └── profiler.py           # Context manager profiler + decorator
 │           ├── filesystems/
+│           │   ├── __init__.py   # Filesystem registry (future plugin loading)
 │           │   ├── detector.py   # FAT/NTFS/ext4/exFAT detection
 │           │   └── fat32/        # FAT32 analysis and recovery
 │           │       ├── boot_sector.py
@@ -257,6 +266,11 @@ class PNGCarver(BaseCarver):
 | Direct disk access      | ✅ Done    |
 | FAT32 parsing            | ✅ Done    |
 | FAT32 file recovery      | ✅ Done    |
+| CI/CD automation         | ✅ Done    |
+| Fuzz testing             | ✅ Done    |
+| Static analysis (mypy+bandit) | ✅ Done |
+| Performance profiling    | ✅ Done    |
+| Recovery validation      | ✅ Done    |
 | ZIP carving              | 🔜 Planned |
 | NTFS parsing             | 🔜 Planned |
 | SSD/TRIM awareness       | 🔜 Planned |

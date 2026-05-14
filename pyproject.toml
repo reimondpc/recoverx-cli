@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "recoverx"
-version = "0.5.0"
+version = "0.5.5"
 description = "Professional file recovery and carving tool for disk images and block devices"
 readme = "README.md"
 license = { text = "MIT" }
@@ -22,6 +22,21 @@ dev = [
     "black>=24.0",
     "isort>=5.13",
     "flake8>=7.0",
+]
+test = [
+    "pytest-cov>=5.0",
+    "pytest-xdist>=3.5",
+]
+static = [
+    "mypy>=1.10",
+    "bandit>=1.7",
+]
+build = [
+    "build>=1.2",
+    "twine>=5.0",
+]
+all = [
+    "recoverx[dev,test,static,build]",
 ]
 
 [project.scripts]
@@ -43,3 +58,40 @@ line_length = 100
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
+addopts = "-p no:xdist"
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["*/tests/*", "*/__pycache__/*", "*/cli/commands/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "raise ImportError",
+    "except ImportError",
+    "def __repr__",
+    "def __str__",
+    "@overload",
+]
+fail_under = 0
+
+[tool.mypy]
+python_version = "3.10"
+strict = false
+ignore_missing_imports = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+check_untyped_defs = true
+disallow_any_unimported = false
+no_implicit_optional = true
+warn_return_any = true
+
+
+
+[tool.bandit]
+exclude_dirs = ["tests", ".venv", ".git"]
+skips = ["B101", "B311"]

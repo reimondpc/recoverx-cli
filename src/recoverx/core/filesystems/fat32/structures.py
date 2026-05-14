@@ -86,6 +86,7 @@ class FATTimestamp:
             return None
 
     def to_dict(self) -> dict:
+        dt = self.to_datetime()
         return {
             "year": self.year,
             "month": self.month,
@@ -93,7 +94,7 @@ class FATTimestamp:
             "hour": self.hour,
             "minute": self.minute,
             "second": self.second,
-            "iso": self.to_datetime().isoformat() if self.to_datetime() else None,
+            "iso": dt.isoformat() if dt else None,
         }
 
 
