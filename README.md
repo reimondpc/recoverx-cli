@@ -5,7 +5,7 @@
   </p>
   <p>
     <img src="https://img.shields.io/badge/python-3.10%2B-blue?logo=python&logoColor=white" alt="Python 3.10+">
-    <img src="https://img.shields.io/badge/pytest-44%20passing-green?logo=pytest" alt="pytest 44 passing">
+    <img src="https://img.shields.io/badge/pytest-187%20passing-green?logo=pytest" alt="pytest 187 passing">
     <img src="https://img.shields.io/badge/code%20style-black-000000?logo=black" alt="Code style: black">
     <img src="https://img.shields.io/badge/license-MIT-yellow?logo=open-source-initiative" alt="MIT License">
     <img src="https://img.shields.io/badge/status-MVP-brightgreen" alt="Status: MVP">
@@ -44,7 +44,10 @@ signature.
 - **JSON forensic reports** — structured output usable in forensic pipelines (`--report report.json`)
 - **Filesystem detection** — automatic identification of FAT12/16/32, exFAT, NTFS, ext2/3/4
 - **Direct disk access** — `recoverx devices` lists connected disks; `recoverx scan /dev/sdX` reads raw devices (read-only)
-- **Testing suite** — 111 pytest tests across all core modules
+- **FAT32 filesystem analysis** — boot sector parsing, directory traversal (SFN + LFN), cluster chain reading
+- **FAT32 deleted file recovery** — scan for 0xE5-marked entries, reconstruct cluster chains, recover with SHA-256
+- **FAT32 CLI** — `recoverx fat32 info`, `list`, `deleted`, `recover` with `--json` output
+- **Testing suite** — 187 pytest tests across all core modules
 
 ## Installation
 
@@ -175,7 +178,12 @@ recoverx/
 │           ├── benchmark/
 │           │   └── advanced_benchmark.py # CPU/RAM/throughput metrics
 │           ├── filesystems/
-│           │   └── detector.py   # FAT/NTFS/ext4/exFAT detection
+│           │   ├── detector.py   # FAT/NTFS/ext4/exFAT detection
+│           │   └── fat32/        # FAT32 analysis and recovery
+│           │       ├── boot_sector.py
+│           │       ├── fat_table.py
+│           │       ├── directory.py
+│           │       └── recovery.py
 │           └── utils/
 │               ├── raw_reader.py # Read-only binary reader (offset/sector)
 │               ├── logger.py     # Rich console + file dual logging
@@ -183,7 +191,7 @@ recoverx/
 │               ├── hash_database.py  # Persistent hash storage / dedup
 │               ├── benchmark.py      # ScanBenchmark (elapsed, MB/s)
 │               └── file_utils.py     # format_size helper
-├── tests/                        # pytest suite (111 tests)
+├── tests/                        # pytest suite (187 tests)
 ├── recovered/                    # Carved file output (gitignored)
 ├── logs/                         # Log files (gitignored)
 ├── signatures/                   # Format signature definitions
@@ -247,11 +255,11 @@ class PNGCarver(BaseCarver):
 | JSON forensic reports   | ✅ Done    |
 | Filesystem detection    | ✅ Done    |
 | Direct disk access      | ✅ Done    |
-| ZIP carving             | 🔜 Planned |
-| Multithreaded scan   | 🔜 Planned |
-| NTFS parsing         | 🔜 Planned |
-| FAT32 parsing        | 🔜 Planned |
-| SSD/TRIM awareness   | 🔜 Planned |
+| FAT32 parsing            | ✅ Done    |
+| FAT32 file recovery      | ✅ Done    |
+| ZIP carving              | 🔜 Planned |
+| NTFS parsing             | 🔜 Planned |
+| SSD/TRIM awareness       | 🔜 Planned |
 | ReFS / APFS support  | 🔜 Planned |
 | GUI (optional)       | 🔜 Planned |
 

@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-05-14
+
+### Added
+
+- **FAT32 boot sector parser** — `parse_boot_sector()` reads and validates BPB fields (OEM ID, cluster/sector geometry, FAT size, volume label, signature)
+- **FAT32 directory traversal** — `parse_directory_entries()` decodes SFN + LFN (0x0F) entries, handles deleted markers (0xE5), free markers (0x00); `walk_directory_tree()` recursively visits subdirectories
+- **FAT cluster chain reader** — `read_cluster_chain()` follows FAT32 FAT entries with loop/bad-cluster/free/zero detection; `read_cluster_data()` reads individual clusters; `read_chain_data()` aggregates cluster data
+- **Deleted file recovery** — `FAT32Recovery.find_deleted_entries()` scans directory trees for 0xE5-marked entries; `recover_deleted_file()` reconstructs cluster chains, truncates to declared size, computes SHA-256
+- **CLI commands** — `recoverx fat32 info`, `list`, `deleted`, `recover` with `--json` output for all subcommands
+- **Test image generator** — `tests/fat32/create_fat32_image.py` builds reproducible FAT32 images with normal files, deleted files, subdirectories, and volume labels
+
+### Changed
+
+- **CLI** — `fat32` subcommand group registered via `app.add_typer(fat32_app)` in `main.py`
+
+### Infrastructure
+
+- 187 total pytest tests (76 new: FAT32 boot sector, FAT table, directory, recovery, integration, CLI)
+- Version bumped to 0.5.0
+
 ## [0.4.0] - 2026-05-14
 
 ### Added

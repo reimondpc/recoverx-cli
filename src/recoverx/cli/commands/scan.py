@@ -106,9 +106,7 @@ def _validate_device(device_path: str, console: Console) -> None:
         )
         raise typer.Exit(code=1)
 
-    console.print(
-        "  [yellow]Warning:[/yellow] Scanning raw device. This is a read-only operation."
-    )
+    console.print("  [yellow]Warning:[/yellow] Scanning raw device. This is a read-only operation.")
 
 
 def _run_streaming(

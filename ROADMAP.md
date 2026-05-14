@@ -52,8 +52,15 @@ document — priorities shift based on community feedback and real-world testing
 - [x] **Direct disk access** — `recoverx devices`, `/dev/sdX` support
 - [x] **111 tests** — black / isort / flake8 clean
 
-## v0.5.0 — Recovery Intelligence 🔜
+## v0.5.0 — Recovery Intelligence ✅
 
+- [x] **FAT32 boot sector parser** — BPB field parsing, validation (signatures, cluster sizes, geometry)
+- [x] **FAT32 directory traversal** — SFN + LFN entries, deleted marker (0xE5), free marker (0x00), recursive subdirectory walking
+- [x] **FAT cluster chain reader** — FAT32 FAT entry walking with loop/bad-cluster/free/zero detection
+- [x] **FAT32 deleted file recovery** — scan for 0xE5 entries, reconstruct cluster chains, truncate to declared size, SHA-256
+- [x] **FAT32 CLI** — `recoverx fat32 {info,list,deleted,recover}` with `--json` output
+- [x] **Test image generator** — reproducible FAT32 images with normal/deleted files and subdirectories
+- [x] **187 tests** — black / isort / flake8 clean
 - [ ] ZIP carver — signature `PK\x03\x04`
 - [ ] Office docs — OLE2 (`\xD0\xCF\x11\xE0`) based files (`.doc`, `.xls`, `.ppt`)
 - [ ] Cancellation support — `KeyboardInterrupt` safe‑stop mid‑scan
@@ -65,7 +72,7 @@ document — priorities shift based on community feedback and real-world testing
 ## v0.6.0 — Filesystem Awareness 🔜
 
 - [ ] **MBR / GPT partition table parser**
-- [ ] **FAT32 reader** — cluster chains, directory entries, long file names
+- [x] **FAT32 reader** — cluster chains, directory entries, long file names
 - [ ] **exFAT reader**
 - [ ] **NTFS reader** — `$MFT`, attributes, resident/non-resident data
 - [ ] **ext2/3/4 reader**

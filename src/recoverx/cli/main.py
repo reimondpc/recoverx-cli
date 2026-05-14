@@ -6,6 +6,7 @@ from rich.console import Console
 from recoverx.cli.commands import devices as devices_cmd
 from recoverx.cli.commands import info as info_cmd
 from recoverx.cli.commands import scan as scan_cmd
+from recoverx.cli.commands.fat32 import fat32_app
 from recoverx.core.utils.logger import setup_logger
 
 app = typer.Typer(
@@ -68,6 +69,9 @@ def scan(
     scan_cmd.run(
         console, path, threads=threads, report=report, no_mmap=no_mmap, chunk_size_mb=chunk_size_mb
     )
+
+
+app.add_typer(fat32_app)
 
 
 def main() -> None:
