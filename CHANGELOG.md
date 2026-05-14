@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-05-14
+
+### Added
+
+- **NTFS boot sector parser** — full BPB extraction (bytes/sector, clusters/FRS, MFT cluster, volume serial, OEM ID), validation, to_dict export
+- **NTFS MFT record parser** — FILE record header parsing, fixup application, record flags (in_use, directory, deleted), attribute iteration
+- **NTFS attribute system** — STANDARD_INFORMATION (timestamps, flags), FILE_NAME (parent ref, name, timestamps, sizes), DATA (resident extraction), non-resident runlist parser foundation
+- **NTFS resident data recovery** — recover small files embedded in MFT records with SHA-256 hashing, recovery status, deleted detection
+- **NTFS deleted entry detection** — walk MFT identifying FILE records with IN_USE=0, metadata extraction
+- **NTFS MFT walker** — sequential record iteration with multi-sector fixup, validation, skip invalid
+- **NTFS CLI** — `recoverx ntfs info` (boot sector details), `mft` (record listing), `deleted` (deleted entries), `resident` (extract small files) with `--json` output
+- **NTFS test image generator** — `tests/ntfs/create_ntfs_images.py` produces valid NTFS images with known files and deleted entries
+- **NTFS test suite** — 97 new tests (boot sector, MFT, attributes, fuzz) covering parsing, edge cases, malformed data
+- **NTFS fuzz tests** — random corruption of boot sectors, MFT records, attributes, runlists, resident data, recovery
+
+### Infrastructure
+
+- 277 total pytest tests (97 new: 35 unit, 27 attribute, 22 fuzz, 13 boot sector)
+- Flake8, mypy (strict), bandit — all passing across NTFS modules
+- Version bumped to 0.6.0
+
 ## [0.5.5] - 2026-05-14
 
 ### Added

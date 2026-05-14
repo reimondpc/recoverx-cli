@@ -76,14 +76,12 @@ document — priorities shift based on community feedback and real-world testing
 - [x] **Packaging** — wheel + sdist verified, `build` + `twine` in dev deps
 - [x] **216 tests** — flake8 / mypy / bandit clean
 
-## v0.6.0 — Filesystem Awareness 🔜
-
-## v0.6.0 — Filesystem Awareness 🔜
+## v0.6.0 — Filesystem Awareness ✅
 
 - [ ] **MBR / GPT partition table parser**
 - [x] **FAT32 reader** — cluster chains, directory entries, long file names
 - [ ] **exFAT reader**
-- [ ] **NTFS reader** — `$MFT`, attributes, resident/non-resident data
+- [x] **NTFS reader** — `$MFT`, attributes, resident data, deleted entry detection
 - [ ] **ext2/3/4 reader**
 - [ ] **Unallocated space extraction** — carve only gaps between allocated files
 - [ ] **File system metadata reporting** — timestamps, permissions, paths

@@ -49,12 +49,15 @@ signature.
 - **FAT32 filesystem analysis** — boot sector parsing, directory traversal (SFN + LFN), cluster chain reading
 - **FAT32 deleted file recovery** — scan for 0xE5-marked entries, reconstruct cluster chains, recover with SHA-256
 - **FAT32 CLI** — `recoverx fat32 info`, `list`, `deleted`, `recover` with `--json` output
+- **NTFS filesystem analysis** — boot sector parser, MFT record walker, attribute system (STANDARD_INFORMATION, FILE_NAME, DATA), resident data extraction
+- **NTFS deleted entry detection** — scan MFT for FILE records with IN_USE=0 flag
+- **NTFS CLI** — `recoverx ntfs info`, `mft`, `deleted`, `resident` with `--json` output
 - **Fuzz testing** — 21 fuzz tests protecting binary parsers against corruption, loops, and malicious input
 - **Recovery validation** — precision, recovery rate, metadata integrity, and hash consistency measurements
 - **CI/CD automation** — GitHub Actions with matrix testing (3.10/3.11/3.12), linting, type checking, security scanning
 - **Static analysis** — `mypy` type checking + `bandit` security scanning
 - **Performance profiling** — `Profiler` context manager with CPU, RAM, throughput metrics, JSON export
-- **Testing suite** — 216 pytest tests across all core modules
+- **Testing suite** — 277 pytest tests across all core modules
 
 ## Installation
 
@@ -188,11 +191,18 @@ recoverx/
 │           ├── filesystems/
 │           │   ├── __init__.py   # Filesystem registry (future plugin loading)
 │           │   ├── detector.py   # FAT/NTFS/ext4/exFAT detection
-│           │   └── fat32/        # FAT32 analysis and recovery
+│           │   ├── fat32/        # FAT32 analysis and recovery
+│           │   │   ├── boot_sector.py
+│           │   │   ├── fat_table.py
+│           │   │   ├── directory.py
+│           │   │   └── recovery.py
+│           │   └── ntfs/         # NTFS analysis and recovery
 │           │       ├── boot_sector.py
-│           │       ├── fat_table.py
-│           │       ├── directory.py
-│           │       └── recovery.py
+│           │       ├── mft.py
+│           │       ├── attributes.py
+│           │       ├── recovery.py
+│           │       ├── structures.py
+│           │       └── constants.py
 │           └── utils/
 │               ├── raw_reader.py # Read-only binary reader (offset/sector)
 │               ├── logger.py     # Rich console + file dual logging
