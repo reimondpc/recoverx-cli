@@ -1,22 +1,53 @@
-# RecoverX
+<div align="center">
+  <h1>RecoverX</h1>
+  <p>
+    <strong>Professional file recovery and carving tool for disk images and block devices.</strong>
+  </p>
+  <p>
+    <img src="https://img.shields.io/badge/python-3.10%2B-blue?logo=python&logoColor=white" alt="Python 3.10+">
+    <img src="https://img.shields.io/badge/pytest-23%20passing-green?logo=pytest" alt="pytest 23 passing">
+    <img src="https://img.shields.io/badge/code%20style-black-000000?logo=black" alt="Code style: black">
+    <img src="https://img.shields.io/badge/license-MIT-yellow?logo=open-source-initiative" alt="MIT License">
+    <img src="https://img.shields.io/badge/status-MVP-brightgreen" alt="Status: MVP">
+  </p>
+</div>
 
-Professional file recovery and carving tool for disk images and block devices.
+---
 
-Extracts deleted files from raw disk images (.img, .dd, .raw) using
-signature-based file carving. Extensible architecture supports adding new
-file formats with minimal code.
+RecoverX extracts deleted or lost files from raw disk images (`.img`, `.dd`, `.raw`)
+and block devices using signature-based **file carving**. Its modular architecture
+makes adding new file formats trivial — implement a single method and register a
+signature.
+
+---
+
+## Features
+
+- **JPEG carving** — extracts JPEG images via SOI (`FFD8FF`) / EOI (`FFD9`) marker detection with configurable lookback window
+- **Raw image scanning** — read-only sector-level and offset-level access to disk images and physical block devices
+- **Disk detection** — enumerate connected disks, partitions, and block devices with size, type, and mount point information
+- **Read-only architecture** — every disk operation is strictly read-only; no writes to the source image
+- **Modular carving engine** — `BaseCarver` ABC + `FileSignature` dataclass; add PNG/PDF/ZIP by creating one file
+- **Rich CLI** — coloured output, live progress bars, formatted tables via `rich`
+- **Dual logging** — console (INFO+) + structured file logs (DEBUG+)
+- **Extensible** — drop-in carvers, centralised signature registry, recovery manager with auto-naming
+- **Testing suite** — 23 pytest tests across all core modules
 
 ## Installation
 
 ```bash
-# Clone and install
-git clone <url> recoverx
+# Clone the repository
+git clone https://github.com/recoverx/recoverx.git
 cd recoverx
+
+# Create and activate a virtual environment
 python3 -m venv .venv
 source .venv/bin/activate
+
+# Install the package
 pip install -e .
 
-# (Optional) dev dependencies for linting and testing
+# (Optional) Development dependencies for linting and testing
 pip install -e ".[dev]"
 ```
 
@@ -28,6 +59,9 @@ recoverx info
 
 # Scan a disk image for recoverable files
 recoverx scan sample.img
+
+# Show help
+recoverx --help
 ```
 
 ### Commands
@@ -37,27 +71,52 @@ recoverx scan sample.img
 | `recoverx info`  | List connected disks, partitions, block devices  |
 | `recoverx scan`  | Scan image/device and carve recoverable files    |
 
-## Development
+### Example output
 
-### Setup
+```text
+RecoverX — Scanning sample.img
+  Size:    10.0 MB
+  Sectors: 20,480
+
+Reading image...
+Reading... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 10.5/10.5 MB 0:00:00
+
+Carving files...
+  [+] JPEG found at offset 204,800
+      Saved: recovered/jpeg_001.jpg
+  [+] JPEG found at offset 5,243,008
+      Saved: recovered/jpeg_002.jpg
+
+                   Recovered Files
+┏━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┓
+┃ # ┃ File         ┃               Offset ┃     Size ┃
+┡━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━┩
+│ 1 │ jpeg_001.jpg │    0x32000 (204,800) │ 1014.0 B │
+│ 2 │ jpeg_002.jpg │ 0x500080 (5,243,008) │  714.0 B │
+└───┴──────────────┴──────────────────────┴──────────┘
+
+Recovery complete: 2 file(s) saved to recovered/
+```
+
+## Development
 
 ```bash
 source .venv/bin/activate
 pip install -e ".[dev]"
 ```
 
-### Linting
+### Testing
+
+```bash
+pytest -v
+```
+
+### Linting and formatting
 
 ```bash
 black src/ tests/
 isort src/ tests/
 flake8 src/ tests/
-```
-
-### Testing
-
-```bash
-pytest -v
 ```
 
 ### Generate test image
@@ -67,51 +126,54 @@ python tests/create_sample.py
 recoverx scan sample.img
 ```
 
-## Supported formats
-
-| Format | Status     |
-| ------ | ---------- |
-| JPEG   | ✅ Working |
-| PNG    | 🔜 Planned |
-| PDF    | 🔜 Planned |
-| ZIP    | 🔜 Planned |
-| NTFS   | 🔜 Planned |
-| FAT32  | 🔜 Planned |
-
 ## Architecture
 
 ```
 recoverx/
 ├── src/
 │   └── recoverx/
-│       ├── cli/              # CLI entry points (Typer)
-│       │   ├── main.py       #       — app definition, info & scan commands
+│       ├── __init__.py           # Package root
+│       ├── cli/
+│       │   ├── main.py           # Typer app, command registration
 │       │   └── commands/
-│       │       ├── info.py   #       — disk info display
-│       │       └── scan.py   #       — carving pipeline
-│       ├── core/
-│       │   ├── disk/         # Disk/partition detection (psutil)
-│       │   ├── carving/      # Signature-based file carvers
-│       │   │   ├── base.py   #       — BaseCarver ABC + CarvedFile/FileSignature
-│       │   │   ├── jpg.py    #       — JPEG carver (FFD8FF / FFD9)
-│       │   │   └── signatures.py  # — signature registry
-│       │   ├── recovery/     # Output file management
-│       │   └── utils/        # RawReader, logging, helpers
-├── tests/                    # pytest test suite
-├── recovered/                # Carved file output (gitignored)
-├── logs/                     # Log files (gitignored)
-├── signatures/               # Format signature definitions
+│       │       ├── info.py       # recoverx info — disk detection
+│       │       └── scan.py       # recoverx scan — carving pipeline
+│       └── core/
+│           ├── disk/
+│           │   └── detector.py   # psutil + /sys/block enumeration
+│           ├── carving/
+│           │   ├── base.py       # BaseCarver ABC + CarvedFile / FileSignature
+│           │   ├── jpg.py        # JPEG carver (FFD8FF / FFD9)
+│           │   └── signatures.py # Centralised signature registry
+│           ├── recovery/
+│           │   └── manager.py    # Auto-named output, counter per extension
+│           └── utils/
+│               ├── raw_reader.py # Read-only binary reader (offset/sector)
+│               ├── logger.py     # Rich console + file dual logging
+│               └── file_utils.py # format_size helper
+├── tests/                        # pytest suite (23 tests)
+├── recovered/                    # Carved file output (gitignored)
+├── logs/                         # Log files (gitignored)
+├── signatures/                   # Format signature definitions
 ├── pyproject.toml
-└── requirements.txt
+├── requirements.txt
+├── CHANGELOG.md
+├── LICENSE
+└── README.md
 ```
 
-## Adding a new format
+### Key design decisions
 
-1. Add a `FileSignature` entry in `src/recoverx/core/carving/signatures.py`
-2. Create a carver class in `src/recoverx/core/carving/` extending `BaseCarver`
-3. Register in the carving pipeline (`cli/commands/scan.py`)
+- **`BaseCarver`** — abstract class that enforces a single `carve(data: bytes) -> list[CarvedFile]` contract. Every format-specific carver (JPEG, PNG, …) is a self-contained subclass.
+- **`RawReader`** — context-managed, read-only binary reader. Works on both files and block devices. Provides `read_at(offset, size)` and `read_sector(sector)` for flexible access.
+- **`RecoveryManager`** — tracks a counter per file extension so output names are deterministic (`jpeg_001.jpg`, `jpeg_002.jpg`, …). Output directory is created automatically.
+- **Signature registry** — `signatures.py` is a single dict that maps format keys to `FileSignature` instances. Adding a format is a one-liner here plus a carver class.
 
-Example for PNG:
+## Adding a new file format
+
+1. Add a `FileSignature` to `src/recoverx/core/carving/signatures.py`
+2. Create a carver in `src/recoverx/core/carving/` that extends `BaseCarver`
+3. Wire it into the scan pipeline in `cli/commands/scan.py`
 
 ```python
 # signatures.py
@@ -119,16 +181,38 @@ SIGNATURES["png"] = FileSignature(
     name="PNG", extension="png",
     header=b"\x89PNG\r\n\x1a\n",
     footer=b"\x00\x00\x00\x00IEND\xae\x42\x60\x82",
+    min_size=67,
 )
 
 # png.py
+from .base import BaseCarver, CarvedFile
+from .signatures import SIGNATURES
+
 class PNGCarver(BaseCarver):
     def __init__(self):
         super().__init__(SIGNATURES["png"])
-    def carve(self, data):
-        # implementation
+
+    def carve(self, data: bytes) -> list[CarvedFile]:
+        # Implementation follows the same header/footer pattern as JPEGCarver
+        ...
 ```
+
+## Future roadmap
+
+| Feature              | Status     |
+|----------------------|------------|
+| JPEG carving         | ✅ Done    |
+| PNG carving          | 🔜 Planned |
+| PDF carving          | 🔜 Planned |
+| ZIP carving          | 🔜 Planned |
+| Chunked streaming    | 🔜 Planned |
+| Multithreaded scan   | 🔜 Planned |
+| NTFS parsing         | 🔜 Planned |
+| FAT32 parsing        | 🔜 Planned |
+| SSD/TRIM awareness   | 🔜 Planned |
+| ReFS / APFS support  | 🔜 Planned |
+| GUI (optional)       | 🔜 Planned |
 
 ## License
 
-MIT
+Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for more information.
