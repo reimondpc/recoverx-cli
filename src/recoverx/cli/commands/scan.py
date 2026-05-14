@@ -1,8 +1,8 @@
 """Scan command for file carving.
 
-Opens a disk image or block device, reads it with a progress bar,
-runs signature-based file carving (currently JPEG), and saves any
-recovered files to the recovered/ directory.
+Opens a disk image or block device, streams it through the chunked
+streaming scanner with all registered carvers, and saves any recovered
+files to the recovered/ directory.
 """
 
 import logging
@@ -20,13 +20,20 @@ from rich.progress import (
 from rich.table import Table
 
 from recoverx.core.carving.jpg import JPEGCarver
+from recoverx.core.carving.png import PNGCarver
+from recoverx.core.carving.streaming import StreamingScanner
 from recoverx.core.recovery.manager import RecoveryManager
+from recoverx.core.utils.benchmark import ScanBenchmark
 from recoverx.core.utils.file_utils import format_size
+from recoverx.core.utils.hashing import HashManager
 from recoverx.core.utils.raw_reader import RawReader
 
 logger = logging.getLogger("recoverx")
 
 CHUNK_SIZE = 4 * 1024 * 1024
+
+# All active carvers — add new carvers here to register them in the pipeline
+CARVERS = [JPEGCarver(), PNGCarver()]
 
 
 def run(console: Console, path: str) -> None:
@@ -53,9 +60,14 @@ def run(console: Console, path: str) -> None:
             console.print("[red]Error:[/red] File is empty.")
             raise typer.Exit(code=1)
 
-        console.print("[bold]Reading image...[/bold]")
-        data = bytearray()
+        console.print("[bold]Scanning image...[/bold]")
 
+        scanner = StreamingScanner(reader, CARVERS, chunk_size=CHUNK_SIZE)
+        bench = ScanBenchmark()
+        bench.bytes_scanned = file_size
+        bench.start()
+
+        carved_files: list = []
         with Progress(
             TextColumn("[progress.description]{task.description}"),
             BarColumn(),
@@ -63,62 +75,62 @@ def run(console: Console, path: str) -> None:
             TimeRemainingColumn(),
             console=console,
         ) as progress:
-            task = progress.add_task("[cyan]Reading...[/cyan]", total=file_size)
-            offset = 0
-            while offset < file_size:
-                chunk_size = min(CHUNK_SIZE, file_size - offset)
-                chunk = reader.read_at(offset, chunk_size)
-                if not chunk:
-                    break
-                data.extend(chunk)
-                offset += len(chunk)
-                progress.update(task, completed=offset)
+            task = progress.add_task("[cyan]Scanning...[/cyan]", total=file_size)
+
+            def _progress(pos: int, total: int) -> None:
+                progress.update(task, completed=pos)
+
+            carved_files = scanner.scan(progress_callback=_progress)
+
+        bench.stop()
+        bench.files_found = len(carved_files)
 
         console.print()
-        console.print("[bold]Carving files...[/bold]")
-
-        logger.info("Starting JPEG carving on %s (%s)", path, format_size(file_size))
-        carver = JPEGCarver()
-        carved_files = carver.carve(bytes(data))
-        logger.info("Carving complete: %d JPEG files found", len(carved_files))
-
-        del data
 
         if not carved_files:
-            console.print("[yellow]No recoverable JPEG files found.[/yellow]")
+            console.print("[yellow]No recoverable files found.[/yellow]")
             logger.info("No recoverable files found in %s", path)
             return
 
+        logger.info("Carving complete: %d files found", len(carved_files))
+
         recovery = RecoveryManager()
+        hasher = HashManager()
         results_table = Table(title="Recovered Files", border_style="green")
         results_table.add_column("#", style="dim")
         results_table.add_column("File", style="cyan")
-        results_table.add_column("Offset", justify="right", style="yellow")
         results_table.add_column("Size", justify="right", style="green")
+        results_table.add_column("SHA256", style="dim")
 
         for i, cf in enumerate(carved_files, 1):
             saved_path = recovery.save(cf)
+            digest = hasher.compute(cf.data)
+
             logger.info(
-                "Recovered %s at offset %d -> %s",
+                "Recovered %s at offset %d -> %s [sha256=%s]",
                 cf.signature_name,
                 cf.offset_start,
                 saved_path,
+                digest,
             )
             console.print(
                 f"  [green][+][/green] {cf.signature_name} found at offset "
                 f"[yellow]{cf.offset_start:,}[/yellow]"
             )
             console.print(f"      Saved: [cyan]{saved_path}[/cyan]")
+            console.print(f"      SHA256: [dim]{digest}[/dim]")
+
             results_table.add_row(
                 str(i),
                 saved_path.name,
-                f"0x{cf.offset_start:X} ({cf.offset_start:,})",
                 format_size(len(cf.data)),
+                digest[:16] + "...",
             )
 
         console.print()
         console.print(results_table)
         console.print()
+        console.print(bench.summary())
         console.print(
             f"[bold green]Recovery complete:[/bold green] "
             f"{recovery.total_files} file(s) saved to [cyan]recovered/[/cyan]"

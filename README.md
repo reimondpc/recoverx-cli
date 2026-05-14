@@ -5,7 +5,7 @@
   </p>
   <p>
     <img src="https://img.shields.io/badge/python-3.10%2B-blue?logo=python&logoColor=white" alt="Python 3.10+">
-    <img src="https://img.shields.io/badge/pytest-23%20passing-green?logo=pytest" alt="pytest 23 passing">
+    <img src="https://img.shields.io/badge/pytest-44%20passing-green?logo=pytest" alt="pytest 44 passing">
     <img src="https://img.shields.io/badge/code%20style-black-000000?logo=black" alt="Code style: black">
     <img src="https://img.shields.io/badge/license-MIT-yellow?logo=open-source-initiative" alt="MIT License">
     <img src="https://img.shields.io/badge/status-MVP-brightgreen" alt="Status: MVP">
@@ -31,7 +31,11 @@ signature.
 - **Rich CLI** — coloured output, live progress bars, formatted tables via `rich`
 - **Dual logging** — console (INFO+) + structured file logs (DEBUG+)
 - **Extensible** — drop-in carvers, centralised signature registry, recovery manager with auto-naming
-- **Testing suite** — 23 pytest tests across all core modules
+- **PNG carving** — extracts PNG images via `\x89PNG` header / IEND footer signature matching
+- **SHA-256 forensic hashing** — per-file SHA-256 hash displayed in CLI output; deduplication support
+- **Chunked streaming scanner** — memory-efficient, configurable chunk/overlap sizes (default 4 MB)
+- **Scan benchmarking** — elapsed time and MB/s throughput reported after every scan
+- **Testing suite** — 44 pytest tests across all core modules
 
 ## Installation
 
@@ -83,19 +87,21 @@ Reading... ━━━━━━━━━━━━━━━━━━━━━━━
 
 Carving files...
   [+] JPEG found at offset 204,800
+      SHA256: a1b2c3d4e5f6...
       Saved: recovered/jpeg_001.jpg
-  [+] JPEG found at offset 5,243,008
-      Saved: recovered/jpeg_002.jpg
+  [+] PNG found at offset 1,048,576
+      SHA256: f6e5d4c3b2a1...
+      Saved: recovered/png_001.png
 
                    Recovered Files
-┏━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┓
-┃ # ┃ File         ┃               Offset ┃     Size ┃
-┡━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━┩
-│ 1 │ jpeg_001.jpg │    0x32000 (204,800) │ 1014.0 B │
-│ 2 │ jpeg_002.jpg │ 0x500080 (5,243,008) │  714.0 B │
-└───┴──────────────┴──────────────────────┴──────────┘
+┏━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ # ┃ File         ┃               Offset ┃     Size ┃ SHA256                      ┃
+┡━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 1 │ jpeg_001.jpg │    0x32000 (204,800) │ 1014.0 B │ a1b2c3d4e5f6...            │
+│ 2 │ png_001.png  │ 0x100000 (1,048,576) │  2.5 KB  │ f6e5d4c3b2a1...            │
+└───┴──────────────┴──────────────────────┴──────────┴────────────────────────────┘
 
-Recovery complete: 2 file(s) saved to recovered/
+Scan complete: 2 file(s) recovered in 0.32s (32.8 MB/s)
 ```
 
 ## Development
@@ -144,14 +150,18 @@ recoverx/
 │           ├── carving/
 │           │   ├── base.py       # BaseCarver ABC + CarvedFile / FileSignature
 │           │   ├── jpg.py        # JPEG carver (FFD8FF / FFD9)
+│           │   ├── png.py        # PNG carver (\x89PNG / IEND)
+│           │   ├── streaming.py  # Chunked streaming scanner with overlap
 │           │   └── signatures.py # Centralised signature registry
 │           ├── recovery/
 │           │   └── manager.py    # Auto-named output, counter per extension
 │           └── utils/
 │               ├── raw_reader.py # Read-only binary reader (offset/sector)
 │               ├── logger.py     # Rich console + file dual logging
+│               ├── hashing.py    # SHA-256 hashing, HashManager
+│               ├── benchmark.py  # ScanBenchmark (elapsed, MB/s)
 │               └── file_utils.py # format_size helper
-├── tests/                        # pytest suite (23 tests)
+├── tests/                        # pytest suite (44 tests)
 ├── recovered/                    # Carved file output (gitignored)
 ├── logs/                         # Log files (gitignored)
 ├── signatures/                   # Format signature definitions
@@ -202,10 +212,12 @@ class PNGCarver(BaseCarver):
 | Feature              | Status     |
 |----------------------|------------|
 | JPEG carving         | ✅ Done    |
-| PNG carving          | 🔜 Planned |
+| PNG carving          | ✅ Done    |
+| SHA-256 hashing      | ✅ Done    |
+| Scan benchmarking    | ✅ Done    |
+| Chunked streaming    | ✅ Done    |
 | PDF carving          | 🔜 Planned |
 | ZIP carving          | 🔜 Planned |
-| Chunked streaming    | 🔜 Planned |
 | Multithreaded scan   | 🔜 Planned |
 | NTFS parsing         | 🔜 Planned |
 | FAT32 parsing        | 🔜 Planned |

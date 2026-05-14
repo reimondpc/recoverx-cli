@@ -30,9 +30,13 @@ document — priorities shift based on community feedback and real-world testing
 - [x] MIT license
 - [x] CHANGELOG.md
 
-## v0.3.0 — Additional Carvers 🔜
+## v0.3.0 — Additional Carvers ✅
 
-- [ ] **PNG carver** — signature `\x89PNG\r\n\x1a\n` / `IEND`
+- [x] **PNG carver** — signature `\x89PNG\r\n\x1a\n` / `IEND`
+- [x] **SHA-256 hashing** — per-file hash with deduplication support
+- [x] **Chunked streaming scanner** — process arbitrarily large images with bounded memory
+- [x] **Sliding window overlap** — handle cross-boundary headers/footers
+- [x] **Benchmark suite** — scan time, MB/s, and file count reporting
 - [ ] **PDF carver** — signature `%PDF` / `%%EOF`
 - [ ] **ZIP carver** — signature `PK\x03\x04`
 - [ ] **GIF carver** — signature `GIF8`
@@ -41,15 +45,17 @@ document — priorities shift based on community feedback and real-world testing
 - [ ] **Enhanced signature registry** — offset-based headers, footer-less carving fallback
 - [ ] **Auto‑register** carvers from a plugin folder
 
-## v0.4.0 — Performance & Streaming 🔜
+## v0.4.0 — Performance & Advanced Carving 🔜
 
-- [ ] **Chunked streaming scanner** — process arbitrarily large images with bounded memory
-- [ ] **Sliding window overlap** — handle cross-boundary headers/footers
 - [ ] **`mmap`-based reader** — zero-copy reads for supported platforms
 - [ ] **Configurable chunk size** — CLI flag `--chunk-size`
 - [ ] **Progress granularity** — per-chunk vs per-sector reporting
 - [ ] **Cancellation support** — `KeyboardInterrupt` safe‑stop mid‑scan
 - [ ] **Resource limits** — `--max-memory`, `--max-time` guards
+- [ ] PDF carver
+- [ ] ZIP carver
+- [ ] GIF carver
+- [ ] BMP carver
 
 ## v0.5.0 — Multithreading 🔜
 

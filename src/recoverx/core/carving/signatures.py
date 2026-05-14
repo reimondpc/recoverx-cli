@@ -15,8 +15,11 @@ SIGNATURES: dict[str, FileSignature] = {
         footer=b"\xff\xd9",
         min_size=128,
     ),
-    # Future formats:
-    # "png":  FileSignature(name="PNG",  extension="png",  header=b"\x89PNG", ...),
-    # "pdf":  FileSignature(name="PDF",  extension="pdf",  header=b"%PDF", ...),
-    # "zip":  FileSignature(name="ZIP",  extension="zip",  header=b"PK\x03\x04", ...),
+    "png": FileSignature(
+        name="PNG",
+        extension="png",
+        header=b"\x89PNG\r\n\x1a\n",
+        footer=b"\x00\x00\x00\x00IEND\xae\x42\x60\x82",
+        min_size=67,
+    ),
 }

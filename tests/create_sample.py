@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
-"""Generate a sample .img file with embedded JPEG files for testing.
+"""Generate a sample .img file with embedded files for testing.
 
-Creates a 10 MB disk image containing valid JPEGs at known offsets,
-allowing end-to-end testing of the carving pipeline.
-
-Uses PIL/Pillow if available for generating real JPEGs; falls back to
-a pure-Python minimal JPEG builder that produces displayable files.
+Creates a 10 MB disk image containing valid JPEGs and PNGs at known
+offsets for end-to-end testing of the carving pipeline.
 """
 
 from __future__ import annotations
 
 import struct
+import zlib
 from pathlib import Path
 
 SAMPLE_DIR = Path(__file__).parent
@@ -25,11 +23,14 @@ except ImportError:
     HAVE_PIL = False
 
 
+# ---------------------------------------------------------------------------
+# JPEG helpers
+# ---------------------------------------------------------------------------
+
+
 def _make_jpeg_pil(width: int, height: int, r: int, g: int, b: int) -> bytes:
-    """Generate a JPEG using Pillow (produces real, displayable images)."""
     img = Image.new("RGB", (width, height), (r, g, b))
     draw = ImageDraw.Draw(img)
-    # Draw a simple shape to make it more interesting
     draw.ellipse(
         [width // 4, height // 4, width * 3 // 4, height * 3 // 4], fill=(255 - r, 255 - g, 255 - b)
     )
@@ -39,13 +40,6 @@ def _make_jpeg_pil(width: int, height: int, r: int, g: int, b: int) -> bytes:
 
 
 def _make_jpeg_pure(width: int, height: int, r: int, g: int, b: int) -> bytes:
-    """Construct a minimal valid JPEG from scratch (no external deps).
-
-    Builds a baseline JPEG with proper SOI/DHT/SOS/EOI markers and
-    Huffman-coded DC-only scan data for a solid-colour fill.  The
-    output is a real, displayable JPEG file.
-    """
-    # Quantisation table (luminance, quality ~75)
     qtable = bytes(
         [
             16,
@@ -118,20 +112,14 @@ def _make_jpeg_pure(width: int, height: int, r: int, g: int, b: int) -> bytes:
     def segment(marker: int, payload: bytes) -> bytes:
         return struct.pack(">BH", marker, len(payload) + 2) + payload
 
-    # --- SOF0 ---
     sof0 = segment(
         0xC0,
         struct.pack(">BHH", 8, height, width)
-        + struct.pack("BBB", 1, 0x11, 0)  # Y
-        + struct.pack("BBB", 2, 0x11, 1)  # Cb
+        + struct.pack("BBB", 1, 0x11, 0)
+        + struct.pack("BBB", 2, 0x11, 1)
         + struct.pack("BBB", 3, 0x11, 1),
-    )  # Cr
-
-    # --- DQT ---
+    )
     dqt = segment(0xDB, b"\x00" + qtable + b"\x01" + qtable)
-
-    # --- DHT (standard Huffman tables from ITU-T T.81 Annex K) ---
-    # Tables as (class, id, counts, values)
     huff_tables = [
         (0, 0, bytes([0, 1, 5, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0]), bytes(range(12))),
         (1, 0, bytes([0, 2, 1, 3, 3, 2, 4, 3, 5, 5, 4, 4, 0, 0, 1, 0x7D]), bytes(range(162))),
@@ -142,18 +130,11 @@ def _make_jpeg_pure(width: int, height: int, r: int, g: int, b: int) -> bytes:
         segment(0xC4, bytes([cls << 4 | id]) + cnts + vals) for cls, id, cnts, vals in huff_tables
     )
 
-    # --- Scan data ---
-    # Map RGB → YCbCr (full-swing)
     y = max(0, min(255, int(0.299 * r + 0.587 * g + 0.114 * b)))
     cb = max(0, min(255, int(128 - 0.168736 * r - 0.331264 * g + 0.5 * b)))
     cr = max(0, min(255, int(128 + 0.5 * r - 0.418688 * g - 0.081312 * b)))
+    blocks = max((width * height) // 64, 1)
 
-    blocks = (width * height) // 64
-    if blocks == 0:
-        blocks = 1  # at least one MCU
-
-    # Encode one block: DC Huffman code + magnitude + EOB
-    # DC luminance Huffman codes from JPEG spec (size → code word)
     dc_huff_lum = {0: 0b00, 1: 0b010, 2: 0b011, 3: 0b100, 4: 0b101, 5: 0b110, 6: 0b1110, 7: 0b11110}
     dc_huff_chr = {
         0: 0b00,
@@ -165,26 +146,20 @@ def _make_jpeg_pure(width: int, height: int, r: int, g: int, b: int) -> bytes:
         6: 0b111110,
         7: 0b1111110,
     }
-    # AC EOB code: luminance = 0b1010 (4 bits), chrominance = 0b00 (2 bits)
 
-    def block_bits(value: int, is_luminance: bool) -> list[int]:
+    def block_bits(value: int, is_lum: bool) -> list[int]:
         bits = []
         size = 0 if value == 0 else value.bit_length()
-        if is_luminance:
-            code = dc_huff_lum.get(size, 0b11111110)
-            code_len = {0: 2, 1: 3, 2: 3, 3: 3, 4: 3, 5: 3, 6: 4, 7: 5}.get(size, 8)
-        else:
-            code = dc_huff_chr.get(size, 0b11111110)
+        table = dc_huff_lum if is_lum else dc_huff_chr
+        code = table.get(size, 0b11111110)
+        code_len = {0: 2, 1: 3, 2: 3, 3: 3, 4: 3, 5: 3, 6: 4, 7: 5}.get(size, 8)
+        if not is_lum:
             code_len = {0: 2, 1: 2, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7}.get(size, 8)
         for i in range(code_len - 1, -1, -1):
             bits.append((code >> i) & 1)
         for i in range(size - 1, -1, -1):
             bits.append((value >> i) & 1)
-        # EOB: "1010" for luminance AC, "00" for chrominance AC
-        if is_luminance:
-            bits.extend([1, 0, 1, 0])
-        else:
-            bits.extend([0, 0])
+        bits.extend([1, 0, 1, 0] if is_lum else [0, 0])
         return bits
 
     scan_bits: list[int] = []
@@ -193,7 +168,6 @@ def _make_jpeg_pure(width: int, height: int, r: int, g: int, b: int) -> bytes:
         scan_bits.extend(block_bits(cb, False))
         scan_bits.extend(block_bits(cr, False))
 
-    # Pack bits into bytes with byte-stuffing (0xFF → 0xFF 0x00)
     scan_data = bytearray()
     acc = 0
     count = 0
@@ -210,7 +184,6 @@ def _make_jpeg_pure(width: int, height: int, r: int, g: int, b: int) -> bytes:
         acc <<= 8 - count
         scan_data.append(acc)
 
-    # --- SOS ---
     sos_body = (
         struct.pack(">B", 3)
         + struct.pack("BBB", 1, 0x00, 0x00)
@@ -220,7 +193,7 @@ def _make_jpeg_pure(width: int, height: int, r: int, g: int, b: int) -> bytes:
     )
     sos = segment(0xDA, sos_body)
 
-    jpeg = (
+    return (
         b"\xff\xd8\xff"
         + segment(0xE0, b"JFIF\x00" + struct.pack(">BHHBB", 1, 1, 1, 0, 0))
         + dqt
@@ -231,18 +204,68 @@ def _make_jpeg_pure(width: int, height: int, r: int, g: int, b: int) -> bytes:
         + b"\xff\xd9"
     )
 
-    return jpeg
-
 
 def _make_jpeg(width: int, height: int, r: int, g: int, b: int) -> bytes:
-    """Generate a JPEG, preferring Pillow if available."""
     if HAVE_PIL:
         return _make_jpeg_pil(width, height, r, g, b)
     return _make_jpeg_pure(width, height, r, g, b)
 
 
+# ---------------------------------------------------------------------------
+# PNG helpers
+# ---------------------------------------------------------------------------
+
+
+def _make_png_pil(width: int, height: int, r: int, g: int, b: int) -> bytes:
+    img = Image.new("RGB", (width, height), (r, g, b))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle(
+        [width // 4, height // 4, width * 3 // 4, height * 3 // 4], fill=(255 - r, 255 - g, 255 - b)
+    )
+    buf = bytearray()
+    img.save(buf, "PNG")
+    return bytes(buf)
+
+
+def _make_png_pure(width: int, height: int, r: int, g: int, b: int) -> bytes:
+    """Construct a minimal valid PNG image (no external deps)."""
+
+    def chunk(chunk_type: bytes, data: bytes) -> bytes:
+        length = len(data)
+        crc = zlib.crc32(chunk_type + data) & 0xFFFFFFFF
+        return struct.pack(">I", length) + chunk_type + data + struct.pack(">I", crc)
+
+    signature = b"\x89PNG\r\n\x1a\n"
+    # IHDR: width, height, bit_depth=8, color_type=2 (RGB), compression=0, filter=0, interlace=0
+    ihdr = chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0))
+
+    # IDAT: raw image data (filter byte + RGB pixels per row, zlib-compressed)
+    raw = bytearray()
+    for y in range(height):
+        raw.append(0)  # filter: None
+        for _ in range(width):
+            raw.extend([r, g, b])
+    compressed = zlib.compress(raw)
+    idat = chunk(b"IDAT", compressed)
+
+    iend = chunk(b"IEND", b"")
+
+    return signature + ihdr + idat + iend
+
+
+def _make_png(width: int, height: int, r: int, g: int, b: int) -> bytes:
+    if HAVE_PIL:
+        return _make_png_pil(width, height, r, g, b)
+    return _make_png_pure(width, height, r, g, b)
+
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+
 def create_disk_image() -> None:
-    """Generate a disk image with embedded JPEGs at known offsets."""
+    """Generate a 10 MB disk image with embedded JPEGs and PNGs."""
     print(f"Creating {DISK_SIZE // 1024 // 1024} MB disk image...")
 
     disk = bytearray(DISK_SIZE)
@@ -253,20 +276,30 @@ def create_disk_image() -> None:
 
     jpg1 = _make_jpeg(64, 64, 180, 40, 40)
     jpg2 = _make_jpeg(32, 32, 40, 80, 200)
+    png1 = _make_png(48, 48, 20, 180, 120)
+    png2 = _make_png(24, 24, 200, 100, 50)
 
-    offset1 = 204800
-    offset2 = 5 * 1024 * 1024 + 128
+    offset_jpg1 = 204800
+    offset_jpg2 = 5 * 1024 * 1024 + 128
+    offset_png1 = 3 * 1024 * 1024
+    offset_png2 = 7 * 1024 * 1024 + 512
 
-    assert offset1 + len(jpg1) <= DISK_SIZE
-    assert offset2 + len(jpg2) <= DISK_SIZE
+    assert offset_jpg1 + len(jpg1) <= DISK_SIZE
+    assert offset_jpg2 + len(jpg2) <= DISK_SIZE
+    assert offset_png1 + len(png1) <= DISK_SIZE
+    assert offset_png2 + len(png2) <= DISK_SIZE
 
-    disk[offset1 : offset1 + len(jpg1)] = jpg1
-    disk[offset2 : offset2 + len(jpg2)] = jpg2
+    disk[offset_jpg1 : offset_jpg1 + len(jpg1)] = jpg1
+    disk[offset_jpg2 : offset_jpg2 + len(jpg2)] = jpg2
+    disk[offset_png1 : offset_png1 + len(png1)] = png1
+    disk[offset_png2 : offset_png2 + len(png2)] = png2
 
     OUTPUT.write_bytes(bytes(disk))
-    print(f"  Saved to   {OUTPUT}")
-    print(f"  JPEG #1 at offset {offset1:,} ({len(jpg1)} B)")
-    print(f"  JPEG #2 at offset {offset2:,} ({len(jpg2)} B)")
+    print(f"  Saved to    {OUTPUT}")
+    print(f"  JPEG #1 at  {offset_jpg1:,} ({len(jpg1)} B)")
+    print(f"  JPEG #2 at  {offset_jpg2:,} ({len(jpg2)} B)")
+    print(f"  PNG  #1 at  {offset_png1:,} ({len(png1)} B)")
+    print(f"  PNG  #2 at  {offset_png2:,} ({len(png2)} B)")
     print("  Done.")
 
 
