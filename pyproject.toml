@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "recoverx"
+version = "0.2.0"
+description = "Professional file recovery and carving tool for disk images and block devices"
+readme = "README.md"
+license = { text = "MIT" }
+keywords = ["forensics", "file-recovery", "carving", "data-recovery", "disk-imaging"]
+requires-python = ">=3.10"
+dependencies = [
+    "typer>=0.12.0",
+    "rich>=13.7.0",
+    "psutil>=5.9.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "black>=24.0",
+    "isort>=5.13",
+    "flake8>=7.0",
+]
+
+[project.scripts]
+recoverx = "recoverx.cli.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["recoverx*"]
+exclude = ["recoverx.tests*"]
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
