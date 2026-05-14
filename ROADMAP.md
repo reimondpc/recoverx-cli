@@ -37,34 +37,30 @@ document — priorities shift based on community feedback and real-world testing
 - [x] **Chunked streaming scanner** — process arbitrarily large images with bounded memory
 - [x] **Sliding window overlap** — handle cross-boundary headers/footers
 - [x] **Benchmark suite** — scan time, MB/s, and file count reporting
-- [ ] **PDF carver** — signature `%PDF` / `%%EOF`
-- [ ] **ZIP carver** — signature `PK\x03\x04`
-- [ ] **GIF carver** — signature `GIF8`
-- [ ] **BMP carver** — signature `BM`
-- [ ] **Office docs** — OLE2 (`\xD0\xCF\x11\xE0`) based files (`.doc`, `.xls`, `.ppt`)
-- [ ] **Enhanced signature registry** — offset-based headers, footer-less carving fallback
-- [ ] **Auto‑register** carvers from a plugin folder
 
-## v0.4.0 — Performance & Advanced Carving 🔜
+## v0.4.0 — Performance + Forensics ✅
 
-- [ ] **`mmap`-based reader** — zero-copy reads for supported platforms
-- [ ] **Configurable chunk size** — CLI flag `--chunk-size`
-- [ ] **Progress granularity** — per-chunk vs per-sector reporting
-- [ ] **Cancellation support** — `KeyboardInterrupt` safe‑stop mid‑scan
-- [ ] **Resource limits** — `--max-memory`, `--max-time` guards
-- [ ] PDF carver
-- [ ] ZIP carver
-- [ ] GIF carver
-- [ ] BMP carver
+- [x] **GIF carver** — GIF87a / GIF89a with 4 MB lookback
+- [x] **BMP carver** — header-declared size extraction
+- [x] **PDF carver** — `%PDF` / `%%EOF` with 8 MB lookback
+- [x] **`mmap`-based scanner** — zero-copy reads, auto-fallback to streaming
+- [x] **Multithreaded scanner** — parallel region scanning, `--threads` CLI flag
+- [x] **Advanced benchmark** — CPU%, peak RSS, files/min, per-thread timing
+- [x] **JSON forensic reports** — structured output, `--report report.json`
+- [x] **Filesystem detection** — FAT12/16/32, exFAT, NTFS, ext2/3/4 superblock parsing
+- [x] **Hash database** — persistent SHA-256 dedup across runs
+- [x] **Direct disk access** — `recoverx devices`, `/dev/sdX` support
+- [x] **111 tests** — black / isort / flake8 clean
 
-## v0.5.0 — Multithreading 🔜
+## v0.5.0 — Recovery Intelligence 🔜
 
-- [ ] **Parallel carving engine** — distribute independent file searches across workers
-- [ ] **Producer‑consumer pipeline** — reader thread → carving workers → recovery writer
-- [ ] **Thread‑safe RecoveryManager** — ordered output with concurrent saves
-- [ ] **Benchmark suite** — measure throughput vs. thread count vs. chunk size
-- [ ] **`--threads` / `--jobs` CLI flag**
-- [ ] **Auto‑detect CPU count** default
+- [ ] ZIP carver — signature `PK\x03\x04`
+- [ ] Office docs — OLE2 (`\xD0\xCF\x11\xE0`) based files (`.doc`, `.xls`, `.ppt`)
+- [ ] Cancellation support — `KeyboardInterrupt` safe‑stop mid‑scan
+- [ ] Resource limits — `--max-memory`, `--max-time` guards
+- [ ] Progress granularity — per-chunk vs per-sector reporting
+- [ ] Enhanced signature registry — offset-based headers, footer-less carving fallback
+- [ ] Auto‑register carvers from a plugin folder
 
 ## v0.6.0 — Filesystem Awareness 🔜
 

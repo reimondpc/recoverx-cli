@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-05-14
+
+### Added
+
+- **GIF carving** — `GIFCarver` supports both GIF87a and GIF89a formats with 4 MB lookback
+- **BMP carving** — `BMPCarver` uses the file size declared in the BMP header to extract complete images
+- **PDF carving** — `PDFCarver` extracts PDFs via `%PDF` / `%%EOF` markers with 8 MB lookback
+- **Memory-mapped scanner** — `MmapScanner` uses `mmap` for zero-copy reads with automatic fallback to streaming on failure or huge files
+- **Multithreaded scanner** — `ThreadedScanner` partitions images into overlapping regions and scans them in parallel; configurable thread count via `--threads`
+- **Advanced benchmark** — `AdvancedBenchmark` tracks CPU%, peak RSS, files/min, and per-thread timing; exports to JSON
+- **JSON forensic reports** — `JSONReport` writes structured output with `scan_info`, `benchmark`, and per-file metadata (offset, size, SHA‑256, path)
+- **Filesystem detection** — automatic identification of FAT12/16/32, exFAT, NTFS, and ext2/3/4 from the boot sector / superblock (read-only)
+- **Hash database** — persistent `HashDatabase` stores SHA‑256 digests across runs; provides dedup and statistics
+- **Direct disk access** — `recoverx devices` command lists all connected disks and raw block devices with optional `--detailed` probe
+- **Device validation** — scanning raw devices (`/dev/sdX`) shows safety warnings and permission checks
+
+### Changed
+
+- **CLI overhaul** — `recoverx scan` now accepts `--threads`, `--report`, `--no-mmap`, `--chunk-size` flags
+- **Scan pipeline** — automatically selects the best scanner (threaded > mmap > streaming) based on source size and flags
+- **Signature registry** — extended with GIF, BMP, PDF entries
+- **Sample image generator** — now embeds GIF, BMP, and PDF test files alongside JPEGs and PNGs
+
+### Infrastructure
+
+- 111 total pytest tests (67 new: GIF, BMP, PDF carvers, mmap, threading, benchmark, reports, FS detection, hash DB, CLI)
+- Cross-boundary file detection tested with configurable chunk/overlap sizes
+- Version bumped to 0.4.0
+
 ## [0.3.0] - 2026-05-14
 
 ### Added

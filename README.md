@@ -32,10 +32,19 @@ signature.
 - **Dual logging** — console (INFO+) + structured file logs (DEBUG+)
 - **Extensible** — drop-in carvers, centralised signature registry, recovery manager with auto-naming
 - **PNG carving** — extracts PNG images via `\x89PNG` header / IEND footer signature matching
+- **GIF carving** — supports both GIF87a and GIF89a formats
+- **BMP carving** — uses file-size-from-header for accurate extraction
+- **PDF carving** — extracts PDFs via `%PDF` / `%%EOF` markers
 - **SHA-256 forensic hashing** — per-file SHA-256 hash displayed in CLI output; deduplication support
+- **Hash database** — persistent SHA-256 hash storage across runs for dedup and statistics
 - **Chunked streaming scanner** — memory-efficient, configurable chunk/overlap sizes (default 4 MB)
-- **Scan benchmarking** — elapsed time and MB/s throughput reported after every scan
-- **Testing suite** — 44 pytest tests across all core modules
+- **Memory-mapped scanner** — zero-copy reads with automatic fallback to streaming
+- **Multithreaded scanner** — parallel region-based scanning with `--threads` CLI flag
+- **Scan benchmarking** — elapsed time, MB/s, CPU%, RAM, files/min; exports to JSON
+- **JSON forensic reports** — structured output usable in forensic pipelines (`--report report.json`)
+- **Filesystem detection** — automatic identification of FAT12/16/32, exFAT, NTFS, ext2/3/4
+- **Direct disk access** — `recoverx devices` lists connected disks; `recoverx scan /dev/sdX` reads raw devices (read-only)
+- **Testing suite** — 111 pytest tests across all core modules
 
 ## Installation
 
@@ -151,17 +160,30 @@ recoverx/
 │           │   ├── base.py       # BaseCarver ABC + CarvedFile / FileSignature
 │           │   ├── jpg.py        # JPEG carver (FFD8FF / FFD9)
 │           │   ├── png.py        # PNG carver (\x89PNG / IEND)
+│           │   ├── gif.py        # GIF carver (GIF87a / GIF89a)
+│           │   ├── bmp.py        # BMP carver (BM + header size)
+│           │   ├── pdf.py        # PDF carver (%PDF / %%EOF)
 │           │   ├── streaming.py  # Chunked streaming scanner with overlap
 │           │   └── signatures.py # Centralised signature registry
+│           ├── scanner/
+│           │   ├── mmap_scanner.py     # Memory-mapped scanner (zero-copy)
+│           │   └── threaded_scanner.py # Parallel region-based scanner
 │           ├── recovery/
 │           │   └── manager.py    # Auto-named output, counter per extension
+│           ├── reporting/
+│           │   └── json_report.py # JSON forensic report generator
+│           ├── benchmark/
+│           │   └── advanced_benchmark.py # CPU/RAM/throughput metrics
+│           ├── filesystems/
+│           │   └── detector.py   # FAT/NTFS/ext4/exFAT detection
 │           └── utils/
 │               ├── raw_reader.py # Read-only binary reader (offset/sector)
 │               ├── logger.py     # Rich console + file dual logging
-│               ├── hashing.py    # SHA-256 hashing, HashManager
-│               ├── benchmark.py  # ScanBenchmark (elapsed, MB/s)
-│               └── file_utils.py # format_size helper
-├── tests/                        # pytest suite (44 tests)
+│               ├── hashing.py        # SHA-256 hashing, HashManager
+│               ├── hash_database.py  # Persistent hash storage / dedup
+│               ├── benchmark.py      # ScanBenchmark (elapsed, MB/s)
+│               └── file_utils.py     # format_size helper
+├── tests/                        # pytest suite (111 tests)
 ├── recovered/                    # Carved file output (gitignored)
 ├── logs/                         # Log files (gitignored)
 ├── signatures/                   # Format signature definitions
@@ -209,15 +231,23 @@ class PNGCarver(BaseCarver):
 
 ## Future roadmap
 
-| Feature              | Status     |
-|----------------------|------------|
-| JPEG carving         | ✅ Done    |
-| PNG carving          | ✅ Done    |
-| SHA-256 hashing      | ✅ Done    |
-| Scan benchmarking    | ✅ Done    |
-| Chunked streaming    | ✅ Done    |
-| PDF carving          | 🔜 Planned |
-| ZIP carving          | 🔜 Planned |
+| Feature                 | Status     |
+|-------------------------|------------|
+| JPEG carving            | ✅ Done    |
+| PNG carving             | ✅ Done    |
+| GIF carving             | ✅ Done    |
+| BMP carving             | ✅ Done    |
+| PDF carving             | ✅ Done    |
+| SHA-256 hashing         | ✅ Done    |
+| Hash database           | ✅ Done    |
+| Scan benchmarking       | ✅ Done    |
+| Chunked streaming       | ✅ Done    |
+| Memory-mapped scanner   | ✅ Done    |
+| Multithreaded scanner   | ✅ Done    |
+| JSON forensic reports   | ✅ Done    |
+| Filesystem detection    | ✅ Done    |
+| Direct disk access      | ✅ Done    |
+| ZIP carving             | 🔜 Planned |
 | Multithreaded scan   | 🔜 Planned |
 | NTFS parsing         | 🔜 Planned |
 | FAT32 parsing        | 🔜 Planned |

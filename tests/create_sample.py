@@ -260,6 +260,61 @@ def _make_png(width: int, height: int, r: int, g: int, b: int) -> bytes:
 
 
 # ---------------------------------------------------------------------------
+# GIF helpers
+# ---------------------------------------------------------------------------
+
+
+def _make_gif(width: int, height: int, r: int, g: int, b: int) -> bytes:
+    header = b"GIF89a"
+    lsd = struct.pack("<HHB", width, height, 0xF0)
+    gct = bytes([r, g, b, 0, 0, 0]) * 16
+    image_descriptor = struct.pack("<BBHHB", 0x2C, 0, 0, width, height, 0x00)
+    image_data = (
+        b"\x02\x16\x8c\x2d\x99\x87\x2a\x1c\xdc\x33\xa0"
+        b"\x02\x75\xec\x95\xfa\xa8\xde\x60\x8c\x04\x91\x4c\x01\x00"
+    )
+    trailer = b"\x3b"
+    return header + lsd + gct + image_descriptor + image_data + trailer
+
+
+# ---------------------------------------------------------------------------
+# BMP helpers
+# ---------------------------------------------------------------------------
+
+
+def _make_bmp(width: int, height: int, r: int, g: int, b: int) -> bytes:
+    row_size = ((width * 3 + 3) // 4) * 4
+    pixel_data_size = row_size * height
+    file_size = 14 + 40 + pixel_data_size
+    header = b"BM" + struct.pack("<I", file_size) + b"\x00\x00\x00\x00" + struct.pack("<I", 54)
+    dib = struct.pack(
+        "<IiiHHIIiiII", 40, width, height, 1, 24, 0, pixel_data_size, 2835, 2835, 0, 0
+    )
+    pixels = bytearray()
+    for y in range(height):
+        for x in range(width):
+            pixels.extend([b, g, r])
+        padding = row_size - width * 3
+        pixels.extend(b"\x00" * padding)
+    return header + dib + bytes(pixels)
+
+
+# ---------------------------------------------------------------------------
+# PDF helpers
+# ---------------------------------------------------------------------------
+
+
+def _make_pdf(size: int) -> bytes:
+    body = (
+        b"1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n"
+        b"2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n"
+        b"3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>\nendobj\n"
+    )
+    body = body.ljust(max(size - len(b"%%EOF"), len(body)), b"\n")
+    return b"%PDF-1.4\n" + body + b"%%EOF"
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -278,21 +333,33 @@ def create_disk_image() -> None:
     jpg2 = _make_jpeg(32, 32, 40, 80, 200)
     png1 = _make_png(48, 48, 20, 180, 120)
     png2 = _make_png(24, 24, 200, 100, 50)
+    gif1 = _make_gif(32, 32, 180, 100, 50)
+    bmp1 = _make_bmp(64, 64, 40, 180, 200)
+    pdf1 = _make_pdf(2048)
 
     offset_jpg1 = 204800
     offset_jpg2 = 5 * 1024 * 1024 + 128
     offset_png1 = 3 * 1024 * 1024
     offset_png2 = 7 * 1024 * 1024 + 512
+    offset_gif1 = 2 * 1024 * 1024
+    offset_bmp1 = 6 * 1024 * 1024
+    offset_pdf1 = 8 * 1024 * 1024
 
     assert offset_jpg1 + len(jpg1) <= DISK_SIZE
     assert offset_jpg2 + len(jpg2) <= DISK_SIZE
     assert offset_png1 + len(png1) <= DISK_SIZE
     assert offset_png2 + len(png2) <= DISK_SIZE
+    assert offset_gif1 + len(gif1) <= DISK_SIZE
+    assert offset_bmp1 + len(bmp1) <= DISK_SIZE
+    assert offset_pdf1 + len(pdf1) <= DISK_SIZE
 
     disk[offset_jpg1 : offset_jpg1 + len(jpg1)] = jpg1
     disk[offset_jpg2 : offset_jpg2 + len(jpg2)] = jpg2
     disk[offset_png1 : offset_png1 + len(png1)] = png1
     disk[offset_png2 : offset_png2 + len(png2)] = png2
+    disk[offset_gif1 : offset_gif1 + len(gif1)] = gif1
+    disk[offset_bmp1 : offset_bmp1 + len(bmp1)] = bmp1
+    disk[offset_pdf1 : offset_pdf1 + len(pdf1)] = pdf1
 
     OUTPUT.write_bytes(bytes(disk))
     print(f"  Saved to    {OUTPUT}")
@@ -300,6 +367,9 @@ def create_disk_image() -> None:
     print(f"  JPEG #2 at  {offset_jpg2:,} ({len(jpg2)} B)")
     print(f"  PNG  #1 at  {offset_png1:,} ({len(png1)} B)")
     print(f"  PNG  #2 at  {offset_png2:,} ({len(png2)} B)")
+    print(f"  GIF  #1 at  {offset_gif1:,} ({len(gif1)} B)")
+    print(f"  BMP  #1 at  {offset_bmp1:,} ({len(bmp1)} B)")
+    print(f"  PDF  #1 at  {offset_pdf1:,} ({len(pdf1)} B)")
     print("  Done.")
 
 

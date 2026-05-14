@@ -1,13 +1,9 @@
 #!/usr/bin/env python3
-"""RecoverX — Professional file recovery and carving tool.
-
-Entry point for the CLI application.  Registers the ``info`` and ``scan``
-commands and initialises logging before dispatching to Typer.
-"""
 
 import typer
 from rich.console import Console
 
+from recoverx.cli.commands import devices as devices_cmd
 from recoverx.cli.commands import info as info_cmd
 from recoverx.cli.commands import scan as scan_cmd
 from recoverx.core.utils.logger import setup_logger
@@ -29,18 +25,52 @@ def info() -> None:
 
 
 @app.command()
+def devices(
+    detailed: bool = typer.Option(
+        False, "--detailed", "-d", help="Show detailed probe information for each device."
+    ),
+) -> None:
+    """List all connected disks and raw block devices."""
+    devices_cmd.run(console, detailed=detailed)
+
+
+@app.command()
 def scan(
     path: str = typer.Argument(
         ...,
         help="Path to a disk image (.img, .dd, .raw) or block device (/dev/sdX).",
     ),
+    threads: int = typer.Option(
+        0,
+        "--threads",
+        "-t",
+        help="Number of scanner threads (0 = auto, 1 = single-threaded).",
+    ),
+    report: str = typer.Option(
+        "",
+        "--report",
+        "-r",
+        help="Path to write JSON forensic report.",
+    ),
+    no_mmap: bool = typer.Option(
+        False,
+        "--no-mmap",
+        help="Disable memory-mapped I/O, force streaming mode.",
+    ),
+    chunk_size_mb: int = typer.Option(
+        4,
+        "--chunk-size",
+        "-c",
+        help="Scanner chunk size in MB.",
+    ),
 ) -> None:
     """Scan a disk image or device for recoverable files using signature-based carving."""
-    scan_cmd.run(console, path)
+    scan_cmd.run(
+        console, path, threads=threads, report=report, no_mmap=no_mmap, chunk_size_mb=chunk_size_mb
+    )
 
 
 def main() -> None:
-    """Application entry point.  Called by the ``recoverx`` console script."""
     setup_logger()
     app()
 

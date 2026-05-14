@@ -22,4 +22,25 @@ SIGNATURES: dict[str, FileSignature] = {
         footer=b"\x00\x00\x00\x00IEND\xae\x42\x60\x82",
         min_size=67,
     ),
+    "gif": FileSignature(
+        name="GIF",
+        extension="gif",
+        header=b"GIF8",
+        footer=b"\x00\x3b",
+        min_size=43,
+    ),
+    "bmp": FileSignature(
+        name="BMP",
+        extension="bmp",
+        header=b"BM",
+        footer=None,
+        min_size=54,
+    ),
+    "pdf": FileSignature(
+        name="PDF",
+        extension="pdf",
+        header=b"%PDF",
+        footer=b"%%EOF",
+        min_size=1024,
+    ),
 }
