@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.1] - 2026-05-15
+
+### Added
+
+- **Official PyPI distribution** — package published via trusted publishing from GitHub Actions
+- **Open source governance** — `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`
+- **Documentation** — quickstart guide, architecture docs, plugin development guide, forensic workflows
+- **Examples** — programmatic carving, forensic timeline analysis, custom plugin, benchmark scripts
+- **`publish.yml` workflow** — PyPI trusted publishing with `pypa/gh-action-pypi-publish` and `id-token: write`
+
+### Infrastructure
+
+- Metadata completed (`authors`, `classifiers`, `[project.urls]`) for PyPI listing
+- Build pinned to `setuptools<77` for twine compatibility
+- `build` + `twine` optional dependencies added
+- 975 total pytest tests — all passing
+- Black, isort, flake8, mypy, bandit — all passing
+
 ## [0.8.0] - 2026-05-15
 
 ### Added
