@@ -6,8 +6,8 @@ import struct
 import tempfile
 
 from recoverx.core.filesystems.ntfs.usn.parser import USNParser
-from recoverx.core.filesystems.ntfs.usn.records import parse_usn_record, parse_usn_records
 from recoverx.core.filesystems.ntfs.usn.reasons import resolve_usn_reasons
+from recoverx.core.filesystems.ntfs.usn.records import parse_usn_record, parse_usn_records
 from recoverx.core.utils.raw_reader import RawReader
 
 

@@ -39,11 +39,7 @@ class SparseHandler:
         return (resolved_runs[-1].vcn_end + 1) * self.cluster_size
 
     def compute_allocated_size(self, resolved_runs: list[DataRun]) -> int:
-        return sum(
-            r.cluster_count * self.cluster_size
-            for r in resolved_runs
-            if not r.is_sparse
-        )
+        return sum(r.cluster_count * self.cluster_size for r in resolved_runs if not r.is_sparse)
 
     def has_sparse_regions(self, resolved_runs: list[DataRun]) -> bool:
         return any(r.is_sparse for r in resolved_runs)

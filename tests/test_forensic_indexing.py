@@ -79,9 +79,9 @@ class TestIndexEngine:
         with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
             db_path = f.name
         try:
+            from recoverx.core.forensics.models import EventSource, EventType, ForensicEvent
             from recoverx.core.indexing.engine import IndexEngine
             from recoverx.core.indexing.models import IndexConfig
-            from recoverx.core.forensics.models import ForensicEvent, EventType, EventSource
 
             config = IndexConfig(db_path=db_path, read_only=False)
             engine = IndexEngine(config)
@@ -104,9 +104,9 @@ class TestIndexEngine:
         with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
             db_path = f.name
         try:
+            from recoverx.core.forensics.models import EventSource, EventType, ForensicEvent
             from recoverx.core.indexing.engine import IndexEngine
             from recoverx.core.indexing.models import IndexConfig
-            from recoverx.core.forensics.models import ForensicEvent, EventType, EventSource
 
             config = IndexConfig(db_path=db_path, read_only=False)
             engine = IndexEngine(config)

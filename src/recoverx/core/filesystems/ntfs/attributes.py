@@ -5,9 +5,9 @@ import struct
 
 from .constants import ATTR_NAMES
 from .structures import (
+    NonResidentAttribute,
     NTFSAttribute,
     ResidentAttribute,
-    NonResidentAttribute,
 )
 
 logger = logging.getLogger("recoverx")
@@ -41,22 +41,45 @@ def parse_attribute_header(data: bytes, offset: int) -> NTFSAttribute | None:
 
         if non_resident:
             return _parse_non_resident(
-                data, offset, length, attr_type, attr_type_name, name_length,
-                name_offset, name, flags, attr_id,
+                data,
+                offset,
+                length,
+                attr_type,
+                attr_type_name,
+                name_length,
+                name_offset,
+                name,
+                flags,
+                attr_id,
             )
         else:
             return _parse_resident(
-                data, offset, length, attr_type, attr_type_name, name_length,
-                name_offset, name, flags, attr_id,
+                data,
+                offset,
+                length,
+                attr_type,
+                attr_type_name,
+                name_length,
+                name_offset,
+                name,
+                flags,
+                attr_id,
             )
     except (struct.error, IndexError):
         return None
 
 
 def _parse_resident(
-    data: bytes, offset: int, length: int,
-    attr_type: int, attr_type_name: str, name_length: int,
-    name_offset: int, name: str, flags: int, attr_id: int,
+    data: bytes,
+    offset: int,
+    length: int,
+    attr_type: int,
+    attr_type_name: str,
+    name_length: int,
+    name_offset: int,
+    name: str,
+    flags: int,
+    attr_id: int,
 ) -> ResidentAttribute | None:
     if len(data) < offset + 24:
         return None
@@ -86,9 +109,16 @@ def _parse_resident(
 
 
 def _parse_non_resident(
-    data: bytes, offset: int, length: int,
-    attr_type: int, attr_type_name: str, name_length: int,
-    name_offset: int, name: str, flags: int, attr_id: int,
+    data: bytes,
+    offset: int,
+    length: int,
+    attr_type: int,
+    attr_type_name: str,
+    name_length: int,
+    name_offset: int,
+    name: str,
+    flags: int,
+    attr_id: int,
 ) -> NonResidentAttribute | None:
     if len(data) < offset + 64:
         return None
@@ -157,11 +187,13 @@ def parse_runlist(data: bytes, offset: int) -> list[dict]:
                 raw_offset |= -1 - (1 << (offset_bytes * 8)) + 1
             cluster_offset = raw_offset
 
-        runs.append({
-            "cluster_count": cluster_count,
-            "cluster_offset": cluster_offset,
-            "is_sparse": is_sparse,
-        })
+        runs.append(
+            {
+                "cluster_count": cluster_count,
+                "cluster_offset": cluster_offset,
+                "is_sparse": is_sparse,
+            }
+        )
         pos += 1 + count_bytes + offset_bytes
 
     return runs

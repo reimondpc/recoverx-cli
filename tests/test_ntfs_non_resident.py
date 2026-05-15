@@ -7,10 +7,10 @@ import tempfile
 from recoverx.core.filesystems.ntfs.boot_sector import parse_boot_sector
 from recoverx.core.filesystems.ntfs.recovery import NTFSRecovery
 from recoverx.core.filesystems.ntfs.structures import (
-    NTFSBootSector,
-    NonResidentAttribute,
     MFTRecord,
     MFTRecordHeader,
+    NonResidentAttribute,
+    NTFSBootSector,
 )
 from recoverx.core.utils.raw_reader import RawReader
 

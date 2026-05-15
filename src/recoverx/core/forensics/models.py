@@ -131,9 +131,7 @@ class TimelineMetadata:
             "time_range_start": (
                 self.time_range_start.isoformat() if self.time_range_start else None
             ),
-            "time_range_end": (
-                self.time_range_end.isoformat() if self.time_range_end else None
-            ),
+            "time_range_end": (self.time_range_end.isoformat() if self.time_range_end else None),
             "total_events": self.total_events,
             "correlated_events": self.correlated_events,
             "unique_files": self.unique_files,

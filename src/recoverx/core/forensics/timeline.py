@@ -76,10 +76,7 @@ class Timeline:
         if mft_reference is not None:
             result = [e for e in result if e.mft_reference == mft_reference]
         if filename_contains:
-            result = [
-                e for e in result
-                if filename_contains.lower() in e.filename.lower()
-            ]
+            result = [e for e in result if filename_contains.lower() in e.filename.lower()]
         if since:
             result = [e for e in result if e.timestamp and e.timestamp >= since]
         if until:
@@ -87,17 +84,11 @@ class Timeline:
         if min_confidence > 0.0:
             result = [e for e in result if e.confidence >= min_confidence]
         if deleted_only:
-            result = [
-                e for e in result
-                if e.event_type in (EventType.FILE_DELETED,)
-            ]
+            result = [e for e in result if e.event_type in (EventType.FILE_DELETED,)]
         return result
 
     def filter_by_file(self, filename: str) -> list[ForensicEvent]:
-        return [
-            e for e in self.events
-            if e.filename == filename or e.previous_filename == filename
-        ]
+        return [e for e in self.events if e.filename == filename or e.previous_filename == filename]
 
     def filter_by_mft(self, mft_ref: int) -> list[ForensicEvent]:
         return [e for e in self.events if e.mft_reference == mft_ref]
@@ -110,9 +101,7 @@ class Timeline:
         source_counts: dict[str, int] = {}
         type_counts: dict[str, int] = {}
         unique_files: set[str] = set()
-        timestamps = [
-            e.timestamp for e in events if e.timestamp is not None
-        ]
+        timestamps = [e.timestamp for e in events if e.timestamp is not None]
 
         for e in events:
             source_counts[e.source.value] = source_counts.get(e.source.value, 0) + 1
@@ -144,24 +133,35 @@ class Timeline:
     def to_csv(self) -> str:
         output = StringIO()
         writer = csv.writer(output)
-        writer.writerow([
-            "timestamp", "event_type", "source", "filename",
-            "previous_filename", "mft_reference", "parent_mft_reference",
-            "file_size", "confidence", "notes",
-        ])
+        writer.writerow(
+            [
+                "timestamp",
+                "event_type",
+                "source",
+                "filename",
+                "previous_filename",
+                "mft_reference",
+                "parent_mft_reference",
+                "file_size",
+                "confidence",
+                "notes",
+            ]
+        )
         for e in self.events:
-            writer.writerow([
-                e.timestamp.isoformat() if e.timestamp else "",
-                e.event_type.value,
-                e.source.value,
-                e.filename,
-                e.previous_filename,
-                str(e.mft_reference),
-                str(e.parent_mft_reference),
-                str(e.file_size),
-                f"{e.confidence:.2f}",
-                "; ".join(e.notes),
-            ])
+            writer.writerow(
+                [
+                    e.timestamp.isoformat() if e.timestamp else "",
+                    e.event_type.value,
+                    e.source.value,
+                    e.filename,
+                    e.previous_filename,
+                    str(e.mft_reference),
+                    str(e.parent_mft_reference),
+                    str(e.file_size),
+                    f"{e.confidence:.2f}",
+                    "; ".join(e.notes),
+                ]
+            )
         return output.getvalue()
 
     def print_chronological(self, limit: int = 0) -> list[str]:

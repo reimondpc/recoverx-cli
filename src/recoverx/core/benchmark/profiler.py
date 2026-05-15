@@ -10,7 +10,7 @@ import json
 import logging
 import os
 import time
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 
 logger = logging.getLogger("recoverx")
 
@@ -104,6 +104,7 @@ def profile_operation(operation: str, bytes_estimate: int = 0):
         def read_chain(reader, bpb, cluster):
             ...
     """
+
     def decorator(func):
         def wrapper(*args, **kwargs):
             with Profiler(operation, bytes_estimate) as p:
@@ -116,5 +117,7 @@ def profile_operation(operation: str, bytes_estimate: int = 0):
                 bytes_estimate,
             )
             return result
+
         return wrapper
+
     return decorator

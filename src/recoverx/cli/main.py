@@ -6,9 +6,11 @@ from rich.console import Console
 from recoverx.cli.commands import devices as devices_cmd
 from recoverx.cli.commands import info as info_cmd
 from recoverx.cli.commands import scan as scan_cmd
+from recoverx.cli.commands.cases import case_app
 from recoverx.cli.commands.fat32 import fat32_app
 from recoverx.cli.commands.forensic import forensic_app
 from recoverx.cli.commands.ntfs import ntfs_app
+from recoverx.cli.commands.plugins import plugins_app
 from recoverx.core.utils.logger import setup_logger
 
 app = typer.Typer(
@@ -76,6 +78,8 @@ def scan(
 app.add_typer(fat32_app)
 app.add_typer(ntfs_app)
 app.add_typer(forensic_app)
+app.add_typer(plugins_app)
+app.add_typer(case_app)
 
 
 def main() -> None:

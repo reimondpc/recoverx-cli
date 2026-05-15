@@ -22,7 +22,7 @@ def _filetime_to_datetime(filetime: int) -> datetime | None:
 
 def _parse_utf16le_name(data: bytes, offset: int, length_bytes: int) -> str:
     try:
-        return data[offset:offset + length_bytes].decode("utf-16-le", errors="replace")
+        return data[offset : offset + length_bytes].decode("utf-16-le", errors="replace")
     except (UnicodeDecodeError, ValueError):
         return ""
 
@@ -85,7 +85,7 @@ def parse_usn_record(data: bytes, offset: int = 0) -> USNRecord | None:
         file_attributes=file_attributes,
         file_name=file_name,
         raw_offset=offset,
-        raw_data=data[offset:offset + record_length],
+        raw_data=data[offset : offset + record_length],
     )
 
 

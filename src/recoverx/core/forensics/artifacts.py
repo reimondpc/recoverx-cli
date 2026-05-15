@@ -16,10 +16,7 @@ def extract_deletion_chain(events: list[ForensicEvent]) -> list[ForensicEvent]:
 
 
 def file_lifespan(events: list[ForensicEvent], filename: str) -> list[ForensicEvent]:
-    return [
-        e for e in events
-        if e.filename == filename or e.previous_filename == filename
-    ]
+    return [e for e in events if e.filename == filename or e.previous_filename == filename]
 
 
 def activity_summary(events: list[ForensicEvent]) -> dict:
@@ -38,7 +35,8 @@ def activity_summary(events: list[ForensicEvent]) -> dict:
 
 
 def most_active_files(
-    events: list[ForensicEvent], top_n: int = 10,
+    events: list[ForensicEvent],
+    top_n: int = 10,
 ) -> list[tuple[str, int]]:
     counter: dict[str, int] = {}
     for e in events:

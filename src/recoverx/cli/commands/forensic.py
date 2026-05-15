@@ -403,6 +403,164 @@ def index_stats(
             console.print(f"  Indexed sources:  {', '.join(st.indexed_sources) or 'none'}")
 
 
+@forensic_app.command()
+def findings(
+    path: str = typer.Argument(..., help="Path to disk image."),
+    severity: str = typer.Option(
+        "", "--severity", "-s", help="Minimum severity: INFO, LOW, MEDIUM, HIGH, CRITICAL."
+    ),
+    limit: int = typer.Option(50, "--limit", "-n", help="Max findings."),
+    json_output: bool = typer.Option(False, "--json", help="Output as JSON."),
+) -> None:
+    """Run all analyzers and produce forensic findings."""
+    console = Console()
+    from recoverx.core.analyzers import (
+        DuplicateActivityAnalyzer,
+        MassDeleteAnalyzer,
+        OrphanArtifactAnalyzer,
+        SuspiciousRenameAnalyzer,
+        TimestampAnomalyAnalyzer,
+    )
+    from recoverx.core.findings import FindingsEngine
+    from recoverx.core.forensics.timeline import Timeline
+    from recoverx.core.utils.raw_reader import RawReader
+
+    from .sources import collect_mft_events, collect_usn_events
+
+    with RawReader(path) as reader:
+        sector0 = reader.read_at(0, 512)
+        from recoverx.core.filesystems.ntfs.boot_sector import parse_boot_sector
+
+        bpb = parse_boot_sector(sector0)
+        if bpb is None:
+            console.print("[red]Error:[/red] Not a valid NTFS boot sector.")
+            raise typer.Exit(code=1)
+
+        tl = Timeline()
+        tl.add_events(collect_mft_events(reader, bpb))
+        tl.add_events(collect_usn_events(reader, bpb))
+        events = tl.events
+
+        engine = FindingsEngine()
+        engine.register_analyzer(MassDeleteAnalyzer())
+        engine.register_analyzer(SuspiciousRenameAnalyzer())
+        engine.register_analyzer(TimestampAnomalyAnalyzer())
+        engine.register_analyzer(DuplicateActivityAnalyzer())
+        engine.register_analyzer(OrphanArtifactAnalyzer())
+        results = engine.analyze(events)
+
+        if severity:
+            sev_map = {
+                "INFO": 0.1,
+                "LOW": 0.3,
+                "MEDIUM": 0.5,
+                "HIGH": 0.7,
+                "CRITICAL": 0.9,
+            }
+            min_score = sev_map.get(severity.upper(), 0.0)
+            results = [f for f in results if f.severity.score() >= min_score]
+        if limit > 0:
+            results = results[:limit]
+
+        if json_output:
+            console.print(json.dumps([r.to_dict() for r in results], indent=2, default=str))
+        else:
+            if not results:
+                console.print("[yellow]No findings.[/yellow]")
+                return
+            table = Table(title=f"Forensic Findings ({len(results)})")
+            table.add_column("Severity", style="bold")
+            table.add_column("Confidence")
+            table.add_column("Title")
+            table.add_column("MFT Refs")
+            for r in results:
+                sev_style = {
+                    "CRITICAL": "red bold",
+                    "HIGH": "red",
+                    "MEDIUM": "yellow",
+                    "LOW": "cyan",
+                    "INFO": "dim",
+                }.get(r.severity.name, "")
+                table.add_row(
+                    f"[{sev_style}]{r.severity.name}[/{sev_style}]",
+                    f"{r.confidence:.2f}",
+                    r.title[:60],
+                    ", ".join(str(m) for m in r.mft_references[:5]),
+                )
+            console.print(table)
+
+        engine.clear()
+
+
+@forensic_app.command()
+def graph(
+    path: str = typer.Argument(..., help="Path to disk image."),
+    json_output: bool = typer.Option(False, "--json", help="Output as JSON."),
+    max_nodes: int = typer.Option(100, "--max-nodes", help="Max graph nodes."),
+) -> None:
+    """Build a correlation graph from forensic events."""
+    console = Console()
+    from recoverx.core.correlation import CorrelationEngineV2
+    from recoverx.core.forensics.timeline import Timeline
+    from recoverx.core.utils.raw_reader import RawReader
+
+    from .sources import collect_mft_events, collect_usn_events
+
+    with RawReader(path) as reader:
+        sector0 = reader.read_at(0, 512)
+        from recoverx.core.filesystems.ntfs.boot_sector import parse_boot_sector
+
+        bpb = parse_boot_sector(sector0)
+        if bpb is None:
+            console.print("[red]Error:[/red] Not a valid NTFS boot sector.")
+            raise typer.Exit(code=1)
+
+        tl = Timeline()
+        tl.add_events(collect_mft_events(reader, bpb))
+        tl.add_events(collect_usn_events(reader, bpb))
+
+        engine = CorrelationEngineV2()
+        result = engine.analyze(tl.events[:2000])
+
+        g = result.get("graph", {})
+        nodes = g.get("nodes", [])[:max_nodes]
+        edges = g.get("edges", [])[: max_nodes * 2]
+
+        if json_output:
+            console.print(json.dumps(g, indent=2, default=str))
+        else:
+            console.print("\n[bold cyan]Correlation Graph:[/bold cyan]")
+            console.print(f"  Total nodes: {len(nodes)} ({g.get('nodes', [])})")
+            console.print(f"  Total edges: {len(edges)}")
+            console.print(f"  Rename chains: {result['summary']['rename_chains']}")
+            console.print(f"  Delete/recreate: {result['summary']['delete_recreate_chains']}")
+            console.print(f"  Anomalies: {result['summary']['anomalies']}")
+            console.print(f"  Findings: {result['summary']['heuristic_findings']}")
+            console.print(f"  Critical: {result['summary']['critical_findings']}")
+            console.print(f"  High: {result['summary']['high_findings']}")
+
+            if result.get("rename_chains"):
+                console.print("\n[bold]Rename Chains:[/bold]")
+                for rc in result["rename_chains"][:10]:
+                    names = " -> ".join(rc["filenames"])
+                    console.print(f"  MFT {rc['mft_reference']}: {names}")
+
+            if result.get("anomalies"):
+                console.print("\n[bold]Anomalies:[/bold]")
+                for a in result["anomalies"][:10]:
+                    console.print(
+                        f"  [{a['type']}] {a['description']} " f"(severity: {a['severity']})"
+                    )
+
+            if result.get("scores"):
+                console.print("\n[bold]Scores:[/bold]")
+                for s in result["scores"][:10]:
+                    console.print(
+                        f"  MFT {s['mft_reference']}: {s['filename']} "
+                        f"({s['severity']}, total: {s['total_score']:.3f})"
+                    )
+
+
 def _default_index_path(image_path: str) -> str:
     base = os.path.splitext(os.path.basename(image_path))[0]
     return os.path.join(tempfile.gettempdir(), f"{base}_forensic.db")

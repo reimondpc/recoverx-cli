@@ -115,21 +115,25 @@ def runs_to_byte_offsets(runs: list[DataRun], bpb) -> list[dict]:
     byte_runs: list[dict] = []
     for run in runs:
         if run.is_sparse:
-            byte_runs.append({
-                "byte_offset": -1,
-                "byte_length": run.cluster_count * cluster_size,
-                "is_sparse": True,
-                "vcn_start": run.vcn_start,
-                "vcn_end": run.vcn_end,
-            })
+            byte_runs.append(
+                {
+                    "byte_offset": -1,
+                    "byte_length": run.cluster_count * cluster_size,
+                    "is_sparse": True,
+                    "vcn_start": run.vcn_start,
+                    "vcn_end": run.vcn_end,
+                }
+            )
         else:
             byte_offset = run.lcn * cluster_size
-            byte_runs.append({
-                "byte_offset": byte_offset,
-                "byte_length": run.cluster_count * cluster_size,
-                "is_sparse": False,
-                "lcn": run.lcn,
-                "vcn_start": run.vcn_start,
-                "vcn_end": run.vcn_end,
-            })
+            byte_runs.append(
+                {
+                    "byte_offset": byte_offset,
+                    "byte_length": run.cluster_count * cluster_size,
+                    "is_sparse": False,
+                    "lcn": run.lcn,
+                    "vcn_start": run.vcn_start,
+                    "vcn_end": run.vcn_end,
+                }
+            )
     return byte_runs

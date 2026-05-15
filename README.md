@@ -5,8 +5,8 @@
   </p>
   <p>
     <img src="https://img.shields.io/badge/python-3.10%20|%203.11%20|%203.12-blue?logo=python&logoColor=white" alt="Python 3.10+">
-    <img src="https://img.shields.io/badge/pytest-418%20passing-green?logo=pytest" alt="pytest 418 passing">
-    <img src="https://img.shields.io/badge/coverage-83%25-yellow?logo=codecov" alt="Coverage 83%">
+    <img src="https://img.shields.io/badge/pytest-954%20passing-green?logo=pytest" alt="pytest 954 passing">
+    <img src="https://img.shields.io/badge/coverage-85%25-yellow?logo=codecov" alt="Coverage 85%">
     <img src="https://img.shields.io/badge/code%20style-black-000000?logo=black" alt="Code style: black">
     <img src="https://img.shields.io/badge/CI-passing-brightgreen?logo=githubactions" alt="CI passing">
     <img src="https://img.shields.io/badge/license-MIT-yellow?logo=open-source-initiative" alt="MIT License">
@@ -67,13 +67,25 @@ signature.
 - **Artifact abstraction layer** — `Artifact`, `FileArtifact`, `TimelineArtifact`, `DeletedArtifact`, `HashArtifact`
 - **Forensic reporting** — CSV, JSON, Markdown export, investigation summary reports
 - **Advanced correlation** — delete/recreate detection, timestamp anomaly, orphan reconstruction
-- **Forensic CLI** — `recoverx forensic timeline`, `search`, `query`, `export`, `summary`, `index`
-- **Fuzz testing** — 37 fuzz tests protecting binary parsers and query engine against corruption and malicious input
+- **Correlation Engine V2** — advanced multi-source correlation with graph-based relationship modeling, rename chains, anomaly detection, heuristic analysis, confidence scoring
+- **Event Graph Engine** — `CorrelationGraph` with nodes/edges, BFS traversal, path finding, anomaly clustering, evidence chain tracing
+- **Distributed Indexing Foundation** — `Coordinator`, `Worker`, `TaskQueue`, `Scheduler`, priority-based task scheduling, retry logic, heartbeat protocol
+- **Remote Acquisition Foundation** — `AcquisitionSession`, `AcquisitionTarget`, `ImageStream`, `TransportInterface`, read-only guarantees, chunked data transfer
+- **Plugin SDK** — `Plugin` base class, `PluginRegistry`, `PluginLoader`, typed interfaces (`FilesystemParserPlugin`, `AnalyzerPlugin`, `ReportExporterPlugin`, etc.), lifecycle management
+- **Analyzer Framework** — `BaseAnalyzer` ABC, specialized analyzers: `MassDeleteAnalyzer`, `SuspiciousRenameAnalyzer`, `TimestampAnomalyAnalyzer`, `DuplicateActivityAnalyzer`, `OrphanArtifactAnalyzer`
+- **Forensic Findings Engine** — `FindingsEngine` with `Finding` dataclass, severity scoring, evidence chains, category classification, confidence filtering
+- **Query Optimization Layer** — `QueryPlanner` with filter pushdown, index scan planning, cost estimation; `QueryCache` with TTL-based expiry, LRU eviction; `MetricsCollector` for query performance tracking
+- **Forensic Export System** — `ForensicBundle` with manifest, integrity hash; `SQLitePackage` with structured event/finding/artifact tables
+- **Performance & Scalability** — `StreamingIndexer` (bounded batches), `IncrementalIndexer` (resumable), `ParallelAnalyzer` (thread pool), `MemoryPressureGuard` (allocation tracking)
+- **Forensic CLI** — `recoverx forensic timeline`, `search`, `query`, `export`, `summary`, `index`, `findings`, `graph`
+- **Case CLI** — `recoverx case create`, `open`, `list`, `close`, `delete`
+- **Plugin CLI** — `recoverx plugins list`
+- **Fuzz testing** — 42 fuzz tests protecting binary parsers, query engine, distributed system, plugin loader, and query optimizer against corruption and malicious input
 - **Recovery validation** — precision, recovery rate, metadata integrity, and hash consistency measurements
 - **CI/CD automation** — GitHub Actions with matrix testing (3.10/3.11/3.12), linting, type checking, security scanning
 - **Static analysis** — `mypy` type checking + `bandit` security scanning
 - **Performance profiling** — `Profiler` context manager with CPU, RAM, throughput metrics, JSON export
-- **Testing suite** — 485 pytest tests across all core modules
+- **Testing suite** — 954 pytest tests across all core modules
 
 ## Installation
 
@@ -182,7 +194,10 @@ recoverx/
 │       │   └── commands/
 │       │       ├── info.py       # recoverx info — disk detection
 │       │       ├── scan.py       # recoverx scan — carving pipeline
-│       │       ├── forensic.py   # recoverx forensic — timeline engine
+│       │       ├── forensic.py   # recoverx forensic — timeline, findings, graph
+│       │       ├── plugins.py    # recoverx plugins — list plugins
+│       │       ├── cases.py      # recoverx case — create, open, list, close
+│       │       ├── sources.py    # Shared MFT/USN collection helpers
 │       │       └── ntfs.py       # recoverx ntfs — USN, LogFile, recovery
 │       └── core/
 │           ├── disk/
@@ -231,6 +246,47 @@ recoverx/
 │           ├── cases/           # Investigation workflows
 │           │   ├── models.py    # CaseMetadata, SavedQuery, Bookmark, TaggedArtifact
 │           │   └── cases.py     # CaseManager, Case (CRUD, bookmarks, tags, notes)
+│           ├── correlation/     # Advanced correlation engine v2
+│           │   ├── engine.py    # CorrelationEngineV2 orchestrator
+│           │   ├── chains.py    # RenameChain, DeleteRecreateChain, ChainBuilder
+│           │   ├── anomalies.py # AnomalyDetector, timestamp/rapid/interleaved
+│           │   ├── heuristics.py# HeuristicEngine, MassDeleteRule, SuspiciousRenameRule
+│           │   ├── scoring.py   # CorrelationScorer, CorrelationScore
+│           │   └── graph.py     # CorrelationGraph, nodes, edges, traversal
+│           ├── distributed/     # Distributed indexing foundation
+│           │   ├── coordinator.py # Coordinator, worker management
+│           │   ├── worker.py    # Worker task execution
+│           │   ├── models.py    # Task, TaskState, ChunkedTask, CompositeTask
+│           │   ├── queue.py     # Priority TaskQueue with heap
+│           │   ├── scheduler.py # Scheduler with concurrent execution
+│           │   └── protocol.py  # TaskMessage, ResultMessage, HeartbeatMessage
+│           ├── acquisition/     # Remote acquisition foundation
+│           │   ├── sessions.py  # AcquisitionSession lifecycle
+│           │   ├── targets.py   # AcquisitionTarget, TargetMetadata
+│           │   ├── streams.py   # ImageStream chunked reading
+│           │   └── transport.py # TransportInterface, LocalTransport
+│           ├── analyzers/       # Specialized forensic analyzers
+│           │   ├── base.py      # BaseAnalyzer, AnalysisResult, FindingSeverity
+│           │   ├── mass_delete.py
+│           │   ├── suspicious_rename.py
+│           │   ├── timestamp_anomaly.py
+│           │   ├── duplicate_activity.py
+│           │   └── orphan_artifact.py
+│           ├── findings/        # Forensic findings engine
+│           │   ├── engine.py    # FindingsEngine, Finding, FindingCategory
+│           │   └── evidence.py  # EvidenceChain, EvidenceLink
+│           ├── optimizer/       # Query optimization layer
+│           │   ├── planner.py   # QueryPlanner, filter pushdown, cost estimation
+│           │   ├── cache.py     # QueryCache with TTL, LRU eviction
+│           │   └── metrics.py   # MetricsCollector, QueryMetrics
+│           ├── performance/     # Performance & scalability
+│           │   ├── streaming.py # StreamingIndexer bounded batches
+│           │   ├── incremental.py # IncrementalIndexer resumable
+│           │   ├── parallel.py  # ParallelAnalyzer thread pool
+│           │   └── memory.py    # MemoryPressureGuard allocation tracking
+│           ├── export/          # Forensic export system
+│           │   ├── bundle.py    # ForensicBundle with manifest
+│           │   └── package.py   # SQLitePackage structured export
 │           ├── filesystems/
 │           │   ├── __init__.py   # Filesystem registry (future plugin loading)
 │           │   ├── detector.py   # FAT/NTFS/ext4/exFAT detection
@@ -269,7 +325,14 @@ recoverx/
 │               ├── hash_database.py  # Persistent hash storage / dedup
 │               ├── benchmark.py      # ScanBenchmark (elapsed, MB/s)
 │               └── file_utils.py     # format_size helper
-├── tests/                        # pytest suite (485 tests)
+│           └── plugins/         # Plugin SDK
+│               ├── __init__.py  # Plugin, PluginType, PluginRegistry exports
+│               ├── base.py      # Plugin, PluginType, PluginCapabilities
+│               ├── interfaces.py # Typed plugin interfaces (FilesystemParserPlugin, etc.)
+│               ├── registry.py  # PluginRegistry with type-based queries
+│               ├── loader.py    # PluginLoader (module/file paths)
+│               └── lifecycle.py # PluginLifecycle init/shutdown
+├── tests/                        # pytest suite (954 tests)
 │   ├── fuzz/                     # Query and binary parser fuzz tests
 ├── recovered/                    # Carved file output (gitignored)
 ├── logs/                         # Log files (gitignored)
@@ -357,9 +420,20 @@ class PNGCarver(BaseCarver):
 | Case management          | ✅ Done    |
 | Artifact abstraction     | ✅ Done    |
 | Forensic reporting       | ✅ Done    |
-| SSD/TRIM awareness       | 🔜 Planned |
-| ReFS / APFS support  | 🔜 Planned |
-| GUI (optional)       | 🔜 Planned |
+| Correlation Engine V2      | ✅ Done    |
+| Event Graph Engine         | ✅ Done    |
+| Distributed Foundation     | ✅ Done    |
+| Remote Acquisition         | ✅ Done    |
+| Plugin SDK                 | ✅ Done    |
+| Analyzer Framework         | ✅ Done    |
+| Findings Engine            | ✅ Done    |
+| Query Optimization         | ✅ Done    |
+| Forensic Export Bundle     | ✅ Done    |
+| Performance & Scalability  | ✅ Done    |
+| Case CLI                   | ✅ Done    |
+| SSD/TRIM awareness         | 🔜 Planned |
+| ReFS / APFS support        | 🔜 Planned |
+| GUI (optional)             | 🔜 Planned |
 
 ## License
 

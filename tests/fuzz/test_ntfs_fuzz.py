@@ -9,28 +9,28 @@ import os
 import random
 import struct
 
-from recoverx.core.filesystems.ntfs.boot_sector import parse_boot_sector, validate_boot_sector
 from recoverx.core.filesystems.ntfs.attributes import (
-    parse_attributes,
     parse_attribute_header,
+    parse_attributes,
     parse_runlist,
 )
+from recoverx.core.filesystems.ntfs.boot_sector import parse_boot_sector, validate_boot_sector
 from recoverx.core.filesystems.ntfs.mft import (
+    apply_fixups,
     parse_mft_record,
     parse_mft_record_header,
-    apply_fixups,
 )
-from recoverx.core.filesystems.ntfs.structures import NTFSBootSector
 from recoverx.core.filesystems.ntfs.runlists.mapping import (
+    DataRun,
     resolve_runlist,
     vcn_to_lcn,
-    DataRun,
-)
-from recoverx.core.filesystems.ntfs.runlists.validation import (
-    validate_runlist,
-    check_circular_runs,
 )
 from recoverx.core.filesystems.ntfs.runlists.sparse import SparseHandler
+from recoverx.core.filesystems.ntfs.runlists.validation import (
+    check_circular_runs,
+    validate_runlist,
+)
+from recoverx.core.filesystems.ntfs.structures import NTFSBootSector
 
 
 class TestNTFSFuzzBootSector:

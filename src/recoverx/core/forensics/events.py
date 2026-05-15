@@ -46,10 +46,14 @@ def file_created(
     **kwargs: Any,
 ) -> ForensicEvent:
     return make_event(
-        EventType.FILE_CREATED, source, timestamp,
-        filename=filename, mft_reference=mft_reference,
+        EventType.FILE_CREATED,
+        source,
+        timestamp,
+        filename=filename,
+        mft_reference=mft_reference,
         parent_mft_reference=parent_mft_reference,
-        file_size=file_size, confidence=Confidence.HIGH.value,
+        file_size=file_size,
+        confidence=Confidence.HIGH.value,
         **kwargs,
     )
 
@@ -63,8 +67,11 @@ def file_deleted(
     **kwargs: Any,
 ) -> ForensicEvent:
     return make_event(
-        EventType.FILE_DELETED, source, timestamp,
-        filename=filename, mft_reference=mft_reference,
+        EventType.FILE_DELETED,
+        source,
+        timestamp,
+        filename=filename,
+        mft_reference=mft_reference,
         parent_mft_reference=parent_mft_reference,
         confidence=Confidence.HIGH.value,
         **kwargs,
@@ -80,9 +87,13 @@ def file_modified(
     **kwargs: Any,
 ) -> ForensicEvent:
     return make_event(
-        EventType.FILE_MODIFIED, source, timestamp,
-        filename=filename, mft_reference=mft_reference,
-        file_size=file_size, confidence=Confidence.HIGH.value,
+        EventType.FILE_MODIFIED,
+        source,
+        timestamp,
+        filename=filename,
+        mft_reference=mft_reference,
+        file_size=file_size,
+        confidence=Confidence.HIGH.value,
         **kwargs,
     )
 
@@ -97,8 +108,11 @@ def file_renamed(
     **kwargs: Any,
 ) -> ForensicEvent:
     return make_event(
-        EventType.FILE_RENAMED, source, timestamp,
-        filename=new_name, previous_filename=old_name,
+        EventType.FILE_RENAMED,
+        source,
+        timestamp,
+        filename=new_name,
+        previous_filename=old_name,
         mft_reference=mft_reference,
         parent_mft_reference=parent_mft_reference,
         confidence=Confidence.HIGH.value,
@@ -115,8 +129,11 @@ def attribute_changed(
     **kwargs: Any,
 ) -> ForensicEvent:
     return make_event(
-        EventType.ATTRIBUTE_CHANGED, source, timestamp,
-        filename=filename, mft_reference=mft_reference,
+        EventType.ATTRIBUTE_CHANGED,
+        source,
+        timestamp,
+        filename=filename,
+        mft_reference=mft_reference,
         confidence=Confidence.MEDIUM.value,
         attribute_type=attribute_type,
         **kwargs,

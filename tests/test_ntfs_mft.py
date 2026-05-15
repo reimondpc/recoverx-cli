@@ -4,9 +4,9 @@ import os
 import struct
 
 from recoverx.core.filesystems.ntfs.mft import (
+    apply_fixups,
     parse_mft_record,
     parse_mft_record_header,
-    apply_fixups,
     read_mft_record,
 )
 from recoverx.core.filesystems.ntfs.structures import NTFSBootSector

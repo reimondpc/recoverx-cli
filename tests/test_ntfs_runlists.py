@@ -3,22 +3,22 @@ from __future__ import annotations
 import os
 import tempfile
 
+from recoverx.core.filesystems.ntfs.runlists.executor import RunlistExecutor
 from recoverx.core.filesystems.ntfs.runlists.mapping import (
     DataRun,
     resolve_runlist,
-    vcn_to_lcn,
     runs_to_byte_offsets,
+    vcn_to_lcn,
 )
-from recoverx.core.filesystems.ntfs.runlists.executor import RunlistExecutor
 from recoverx.core.filesystems.ntfs.runlists.sparse import (
     SparseHandler,
-    is_sparse_runlist,
-    count_sparse_regions,
     count_allocated_regions,
+    count_sparse_regions,
+    is_sparse_runlist,
 )
 from recoverx.core.filesystems.ntfs.runlists.validation import (
-    validate_runlist,
     check_circular_runs,
+    validate_runlist,
 )
 from recoverx.core.filesystems.ntfs.structures import NTFSBootSector
 from recoverx.core.utils.raw_reader import RawReader

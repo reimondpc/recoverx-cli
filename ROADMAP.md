@@ -112,16 +112,34 @@ document — priorities shift based on community feedback and real-world testing
 - [x] **Forensic test suite** — 78 new tests (unit + fuzz)
 - [x] **Architecture registries** — `FORENSIC_REGISTRY` integration
 
-## v0.7.5 — Advanced Journaling & Correlation 🔜
+## v0.7.5 — Advanced Journaling & Correlation ✅
 
-- [ ] **Bifragment gap carving** — locate header and footer with known gap
-- [ ] **Smart fragment reassembly** — scoring/ranking candidate fragments
-- [ ] **Metadata recovery from carving context** — embedded EXIF, document properties
-- [ ] **Timestamp extraction** — file system timestamps near carved regions
-- [ ] **Carving statistics** — fragmentation ratio, completeness estimate
-- [ ] **Validation hooks** — post‑carve integrity checks (CRC, image dimensions, etc.)
+- [x] **Bifragment gap carving** — locate header and footer with known gap
+- [x] **Smart fragment reassembly** — scoring/ranking candidate fragments
+- [x] **Metadata recovery from carving context** — embedded EXIF, document properties
+- [x] **Timestamp extraction** — file system timestamps near carved regions
+- [x] **Carving statistics** — fragmentation ratio, completeness estimate
+- [x] **Validation hooks** — post‑carve integrity checks (CRC, image dimensions, etc.)
 
-## v0.8.0 — SSD & Modern Hardware 🔬
+## v0.8.0 — Advanced Correlation & Distributed Forensics ✅
+
+- [x] **Advanced Correlation Engine V2** — multi-source correlation, rename chains, delete/recreate, anomaly detection, heuristic rules, confidence scoring
+- [x] **Event Graph Engine** — `CorrelationGraph` with nodes/edges, BFS traversal, path finding, anomaly clustering
+- [x] **Distributed Indexing Foundation** — `Coordinator`, `Worker`, `TaskQueue`, `Scheduler`, priority-based scheduling, retry logic
+- [x] **Remote Acquisition Foundation** — `AcquisitionSession`, `AcquisitionTarget`, `ImageStream`, `TransportInterface`, read-only guarantees
+- [x] **Plugin SDK** — `Plugin` base class, `PluginRegistry`, `PluginLoader`, typed interfaces, lifecycle management
+- [x] **Analyzer Framework** — `MassDeleteAnalyzer`, `SuspiciousRenameAnalyzer`, `TimestampAnomalyAnalyzer`, `DuplicateActivityAnalyzer`, `OrphanArtifactAnalyzer`
+- [x] **Forensic Findings Engine** — `FindingsEngine`, `Finding` with severity/confidence/evidence chains, category classification
+- [x] **Query Optimization Layer** — `QueryPlanner` with filter pushdown, cost estimation; `QueryCache` with TTL; `MetricsCollector`
+- [x] **Forensic Export System** — `ForensicBundle`, `SQLitePackage` with chain-of-custody metadata and integrity verification
+- [x] **Performance & Scalability** — `StreamingIndexer`, `IncrementalIndexer`, `ParallelAnalyzer`, `MemoryPressureGuard`
+- [x] **CLI Expansion** — `recoverx forensic findings`, `recoverx forensic graph`, `recoverx plugins list`, `recoverx case create/open/list/close/delete`
+- [x] **Registry Expansion** — `FORENSIC_REGISTRY` entries for analyzers, plugins, exporters, distributed workers, acquisition providers
+- [x] **Fuzz Testing Expansion** — 51 new fuzz tests for query optimizer (planner, cache concurrency, metrics)
+- [x] **954 tests** — flake8 / mypy / bandit clean (74 source files)
+- [x] **Version 0.8.0** — Release title: "Advanced Correlation & Distributed Forensics"
+
+## v0.9.0 — SSD & Modern Hardware 🔬
 
 - [ ] **Research TRIM/unmap impact on carve success rates**
 - [ ] **NVMe passthrough** — read NVMe namespaces directly

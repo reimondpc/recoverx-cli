@@ -44,9 +44,7 @@ class RunlistExecutor:
         resolved = resolve_runlist(data_runs, self.bpb)
         return self._read_resolved_sparse(resolved, real_size, max_bytes)
 
-    def read_vcn_range(
-        self, resolved: list[DataRun], start_vcn: int, end_vcn: int
-    ) -> bytes:
+    def read_vcn_range(self, resolved: list[DataRun], start_vcn: int, end_vcn: int) -> bytes:
         cluster_size = self.cluster_size
         data = bytearray()
         for run in resolved:
@@ -79,7 +77,10 @@ class RunlistExecutor:
         return lcn * self.cluster_size
 
     def _read_resolved(
-        self, resolved: list[DataRun], real_size: int, max_bytes: int = 0,
+        self,
+        resolved: list[DataRun],
+        real_size: int,
+        max_bytes: int = 0,
     ) -> bytes:
         cluster_size = self.cluster_size
         limit = max_bytes if max_bytes > 0 else real_size
@@ -122,7 +123,10 @@ class RunlistExecutor:
                 remaining -= run_bytes
 
     def _read_resolved_sparse(
-        self, resolved: list[DataRun], real_size: int, max_bytes: int = 0,
+        self,
+        resolved: list[DataRun],
+        real_size: int,
+        max_bytes: int = 0,
     ) -> bytes:
         cluster_size = self.cluster_size
         limit = max_bytes if max_bytes > 0 else real_size
@@ -152,7 +156,9 @@ class RunlistExecutor:
         return bytes(data[:real_size])
 
     def estimate_recoverable_bytes(
-        self, resolved: list[DataRun], real_size: int,
+        self,
+        resolved: list[DataRun],
+        real_size: int,
     ) -> tuple[int, int, int]:
         total = 0
         recoverable = 0

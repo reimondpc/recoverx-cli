@@ -34,7 +34,7 @@ class Case:
             event_id=event_id,
             artifact_id=artifact_id,
             notes=notes,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(),
             label=label,
         )
         self._storage.execute(
@@ -66,7 +66,7 @@ class Case:
             name=name,
             query_string=query_string,
             case_id=self.case_id,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(),
             description=description,
         )
         self._storage.execute(
@@ -97,7 +97,7 @@ class Case:
             artifact_id=artifact_id,
             case_id=self.case_id,
             source=source,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(),
         )
         self._storage.execute(
             """
@@ -221,8 +221,8 @@ class CaseManager:
             name=name,
             description=description,
             examiner=examiner,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
+            created_at=datetime.now(),
+            updated_at=datetime.now(),
             status="open",
         )
         self._storage.execute(

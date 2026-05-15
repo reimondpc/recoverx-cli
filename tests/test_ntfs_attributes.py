@@ -9,8 +9,8 @@ from recoverx.core.filesystems.ntfs.attributes import (
     parse_runlist,
 )
 from recoverx.core.filesystems.ntfs.structures import (
-    ResidentAttribute,
     NonResidentAttribute,
+    ResidentAttribute,
 )
 
 

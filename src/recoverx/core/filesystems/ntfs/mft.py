@@ -6,12 +6,12 @@ from datetime import datetime, timedelta, timezone
 
 from recoverx.core.utils.raw_reader import RawReader
 
+from .attributes import parse_attributes
 from .constants import FILE_RECORD_SIGNATURE
 from .structures import (
     MFTRecord,
     MFTRecordHeader,
 )
-from .attributes import parse_attributes
 
 logger = logging.getLogger("recoverx")
 
@@ -61,9 +61,7 @@ def apply_fixups(data: bytes, header: MFTRecordHeader) -> bytes:
     sector_size = 512
 
     try:
-        fixup_values = struct.unpack_from(
-            f"<{header.fixup_count}H", data, header.fixup_offset
-        )
+        fixup_values = struct.unpack_from(f"<{header.fixup_count}H", data, header.fixup_offset)
         for i in range(1, header.fixup_count):
             sector_end = i * sector_size - 2
             if 0 <= sector_end < record_size - 1:
@@ -94,10 +92,10 @@ def parse_mft_record(data: bytes, record_size: int = 1024) -> MFTRecord | None:
     resident_data = b""
     for attr in attributes:
         from .structures import (
-            ResidentAttribute,
-            StandardInformation,
             FileNameAttribute,
             NonResidentAttribute,
+            ResidentAttribute,
+            StandardInformation,
         )
 
         if attr.attr_type == 0x10 and hasattr(attr, "data"):

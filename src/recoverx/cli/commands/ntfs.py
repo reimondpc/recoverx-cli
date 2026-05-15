@@ -77,8 +77,9 @@ def mft(
 ) -> None:
     """List MFT records (active files and directories)."""
     console = Console()
-    _with_bpb(console, path,
-              lambda reader, bpb: _list_mft(console, reader, bpb, limit, json_output))
+    _with_bpb(
+        console, path, lambda reader, bpb: _list_mft(console, reader, bpb, limit, json_output)
+    )
 
 
 @ntfs_app.command()
@@ -89,8 +90,9 @@ def deleted(
 ) -> None:
     """List deleted entries found in the MFT."""
     console = Console()
-    _with_bpb(console, path,
-              lambda reader, bpb: _list_deleted(console, reader, bpb, limit, json_output))
+    _with_bpb(
+        console, path, lambda reader, bpb: _list_deleted(console, reader, bpb, limit, json_output)
+    )
 
 
 @ntfs_app.command()
@@ -102,9 +104,11 @@ def resident(
 ) -> None:
     """Recover resident (small) files from MFT records."""
     console = Console()
-    _with_bpb(console, path, lambda reader, bpb: _recover_resident(
-        console, reader, bpb, output, limit, json_output
-    ))
+    _with_bpb(
+        console,
+        path,
+        lambda reader, bpb: _recover_resident(console, reader, bpb, output, limit, json_output),
+    )
 
 
 @ntfs_app.command()
@@ -122,10 +126,22 @@ def recover(
 ) -> None:
     """Recover files from NTFS (resident and non-resident)."""
     console = Console()
-    _with_bpb(console, path, lambda reader, bpb: _recover_files(
-        console, reader, bpb, output, limit,
-        deleted_only, non_resident_only, verify_hashes, json_output, threads,
-    ))
+    _with_bpb(
+        console,
+        path,
+        lambda reader, bpb: _recover_files(
+            console,
+            reader,
+            bpb,
+            output,
+            limit,
+            deleted_only,
+            non_resident_only,
+            verify_hashes,
+            json_output,
+            threads,
+        ),
+    )
 
 
 def _with_bpb(console: Console, path: str, callback) -> None:
@@ -212,8 +228,12 @@ def _list_deleted(
 
 
 def _recover_resident(
-    console: Console, reader, bpb: NTFSBootSector,
-    output: str, limit: int, json_output: bool,
+    console: Console,
+    reader,
+    bpb: NTFSBootSector,
+    output: str,
+    limit: int,
+    json_output: bool,
 ) -> None:
     rec = NTFSRecovery(reader, bpb)
     resident_records = rec.find_resident_files(max_records=limit)
@@ -244,9 +264,7 @@ def _recover_resident(
                 f"  [yellow]SKIP[/yellow] {result.original_name} ({result.recovery_status})"
             )
 
-    console.print(
-        f"\n[bold green]Recovery complete:[/bold green] {len(recovered_list)} file(s)"
-    )
+    console.print(f"\n[bold green]Recovery complete:[/bold green] {len(recovered_list)} file(s)")
 
     if json_output:
         report = {"filesystem": bpb.to_dict(), "recovered_files": recovered_list}
@@ -254,7 +272,10 @@ def _recover_resident(
 
 
 def _recover_single_file(
-    path: str, bpb: NTFSBootSector, record: MFTRecord, output: str,
+    path: str,
+    bpb: NTFSBootSector,
+    record: MFTRecord,
+    output: str,
 ) -> tuple[RecoveredNTFSFile, str] | None:
     """Recover a single file with its own reader (thread-safe)."""
     with RawReader(path) as reader:
@@ -272,10 +293,16 @@ def _recover_single_file(
 
 
 def _recover_files(
-    console: Console, reader, bpb: NTFSBootSector,
-    output: str, limit: int,
-    deleted_only: bool, non_resident_only: bool,
-    verify_hashes: bool, json_output: bool, threads: int,
+    console: Console,
+    reader,
+    bpb: NTFSBootSector,
+    output: str,
+    limit: int,
+    deleted_only: bool,
+    non_resident_only: bool,
+    verify_hashes: bool,
+    json_output: bool,
+    threads: int,
 ) -> None:
     rec = NTFSRecovery(reader, bpb)
 
@@ -288,8 +315,7 @@ def _recover_files(
         candidates = [r for r in candidates if r.has_non_resident_data]
     else:
         candidates = [
-            r for r in candidates
-            if (r.resident and r.data_resident) or r.has_non_resident_data
+            r for r in candidates if (r.resident and r.data_resident) or r.has_non_resident_data
         ]
 
     if not candidates:
@@ -306,7 +332,11 @@ def _recover_files(
         with ThreadPoolExecutor(max_workers=threads) as executor:
             futures = {
                 executor.submit(
-                    _recover_single_file, reader.path, bpb, record, output,
+                    _recover_single_file,
+                    reader.path,
+                    bpb,
+                    record,
+                    output,
                 ): record
                 for record in candidates
             }
@@ -326,7 +356,10 @@ def _recover_files(
     else:
         for record in candidates:
             result_tuple = _recover_single_file(
-                reader.path, bpb, record, output,
+                reader.path,
+                bpb,
+                record,
+                output,
             )
             if result_tuple:
                 result, saved_path = result_tuple
@@ -347,9 +380,7 @@ def _recover_files(
         console.print(json.dumps(report, indent=2))
         return
 
-    console.print(
-        f"\n[bold green]Recovery complete:[/bold green] {len(recovered_list)} file(s)"
-    )
+    console.print(f"\n[bold green]Recovery complete:[/bold green] {len(recovered_list)} file(s)")
 
 
 def _print_recovery_result(console: Console, result, saved_path: str) -> None:
@@ -493,14 +524,16 @@ def usn(
             records = records[:limit]
 
         if json_output:
-            console.print(json.dumps(
-                {"usn_records": [r.to_dict() for r in records]}, indent=2,
-            ))
+            console.print(
+                json.dumps(
+                    {"usn_records": [r.to_dict() for r in records]},
+                    indent=2,
+                )
+            )
             return
 
         console.print(
-            f"[bold cyan]USN Journal[/bold cyan] — "
-            f"[yellow]{len(records)} records[/yellow]\n"
+            f"[bold cyan]USN Journal[/bold cyan] — " f"[yellow]{len(records)} records[/yellow]\n"
         )
 
         table = Table(border_style="cyan")
@@ -512,9 +545,7 @@ def usn(
 
         for r in records:
             ts = r.timestamp.strftime("%Y-%m-%d %H:%M:%S") if r.timestamp else "-"
-            reasons = ", ".join(
-                n.replace("USN_REASON_", "")[:20] for n in r.reason_names[:3]
-            )
+            reasons = ", ".join(n.replace("USN_REASON_", "")[:20] for n in r.reason_names[:3])
             table.add_row(
                 str(r.usn),
                 ts,
@@ -554,9 +585,7 @@ def logfile(
             console.print(json.dumps(result, indent=2, default=str))
             return
 
-        console.print(
-            f"[bold cyan]$LogFile Analysis[/bold cyan]\n"
-        )
+        console.print(f"[bold cyan]$LogFile Analysis[/bold cyan]\n")
         console.print(f"  Pages:         {result['page_count']}")
         console.print(f"  Page Size:     {result['page_size']} bytes")
         console.print(f"  Restart Pages: {len(result['restart_pages'])}")
@@ -568,7 +597,9 @@ def logfile(
                 console.print(f"  Last LSN: {ra['last_lsn']}  Oldest LSN: {ra['oldest_lsn']}")
 
         if result["records"]:
-            console.print(f"\n[bold]Log Records ({min(limit, len(result['records']))} shown):[/bold]")
+            console.print(
+                f"\n[bold]Log Records ({min(limit, len(result['records']))} shown):[/bold]"
+            )
             table = Table(border_style="yellow")
             table.add_column("LSN", style="white", justify="right")
             table.add_column("Type", style="cyan")

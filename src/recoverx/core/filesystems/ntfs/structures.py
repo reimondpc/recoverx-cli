@@ -101,6 +101,7 @@ def _ntfs_timestamp_to_datetime(ts: int) -> datetime | None:
         return None
     try:
         from datetime import timedelta
+
         return datetime(1601, 1, 1, tzinfo=timezone.utc) + timedelta(microseconds=ts // 10)
     except (OverflowError, ValueError):
         return None

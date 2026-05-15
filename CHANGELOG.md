@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2026-05-15
+
+### Added
+
+- **Advanced Correlation Engine V2** — `core/correlation/` package with `CorrelationEngineV2` orchestrator, `ChainBuilder` (rename chains, delete/recreate chains, overwrite chains), `AnomalyDetector` (timestamp reversal, zero-delta burst, rapid rename, interleaved activity), `HeuristicEngine` (mass delete rule, suspicious rename rule), `CorrelationScorer` with weighted multi-factor scoring and severity classification.
+- **Event Graph Engine** — `CorrelationGraph` with `CorrelationNode`/`CorrelationEdge` dataclasses, BFS graph traversal, path finding between events, event-to-graph mapping, anomaly clustering support, JSON serialization.
+- **Distributed Indexing Foundation** — `core/distributed/` package with `Coordinator` (worker registration, heartbeat monitoring, status reporting), `Worker` (task execution, capability advertising, heartbeat loop), `TaskQueue` (priority heap with retry/cancel support), `Scheduler` (concurrent execution, batch submission), `Task`/`ChunkedTask`/`CompositeTask` models, `TaskMessage`/`ResultMessage`/`HeartbeatMessage` protocol. No real networking — pure architecture and interfaces.
+- **Remote Acquisition Foundation** — `core/acquisition/` package with `AcquisitionSession` (lifecycle: pending→active→completed/failed/cancelled), `AcquisitionTarget` (local file, local device, remote, memory dump, etc.), `ImageStream` (chunked streaming), `TransportInterface`/`LocalTransport` (abstract transport layer). Read-only guaranteed.
+- **Plugin SDK** — `plugins/` package with `Plugin` base class, `PluginType` enum (FILESYSTEM_PARSER, ARTIFACT_PROVIDER, REPORT_EXPORTER, QUERY_EXTENSION, ANALYZER, ACQUISITION_PROVIDER, DISTRIBUTED_WORKER, TRANSPORT), `PluginCapabilities` (parallel_safe, streaming, incremental, resumable, bounded_memory), `PluginRegistry` (type-based queries), `PluginLoader` (module/file-path loading), `PluginLifecycle` (init/shutdown/validate).
+- **Analyzer Framework** — `core/analyzers/` package with `BaseAnalyzer` ABC, `AnalysisResult` dataclass, `FindingSeverity` enum. Implemented analyzers: `MassDeleteAnalyzer` (bulk deletion detection), `SuspiciousRenameAnalyzer` (rename chain analysis, rapid rename detection), `TimestampAnomalyAnalyzer` (reversal counting), `DuplicateActivityAnalyzer` (repeated event detection), `OrphanArtifactAnalyzer` (missing create/deletion records).
+- **Forensic Findings Engine** — `core/findings/` package with `FindingsEngine` (analyzer registration, batch analysis), `Finding` dataclass (category, severity, confidence, evidence chain, composite score), `EvidenceChain`/`EvidenceLink` (structured evidence tracking), `FindingCategory` enum (SUSPICIOUS_ACTIVITY, ANTI_FORENSICS, TIMESTAMP_TAMPERING, BULK_DELETION, OVERWRITE_PATTERN, FRAGMENTED_ANOMALY, ORPHAN_ACTIVITY, DUPLICATE_ACTIVITY).
+- **Query Optimization Layer** — `core/optimizer/` package with `QueryPlanner` (filter pushdown, index scan planning, cost estimation, SQL rewriting), `QueryCache` (TTL-based expiry, LRU eviction, hit rate tracking, concurrent-safe), `MetricsCollector` (duration tracking, cache hit/index usage stats).
+- **Forensic Export System** — `core/export/` package with `ForensicBundle` (manifest, events, findings, artifacts, integrity hash, JSON export), `SQLitePackage` (structured SQLite database with events/findings/artifacts tables).
+- **Performance & Scalability** — `core/performance/` package with `StreamingIndexer` (bounded batch flushing), `IncrementalIndexer` (position tracking, resumable), `ParallelAnalyzer` (thread pool with concurrent.futures), `MemoryPressureGuard` (allocation tracking, pressure detection).
+- **Forensic Registry Expansion** — new registration functions (`register_analyzer`, `register_plugin`, `register_exporter`, `register_distributed_worker`, `register_acquisition_provider`) and list functions (`list_analyzers`, `list_plugins`, `list_distributed_workers`, `list_acquisition_providers`).
+- **CLI Commands** — `recoverx forensic findings <image>` (run all analyzers with severity/confidence filtering, table or JSON output), `recoverx forensic graph <image>` (build correlation graph, show chains/anomalies/scores), `recoverx plugins list` (list registered plugins with capabilities), `recoverx case create/open/list/close/delete` (full investigation case management).
+- **Fuzz Testing Expansion** — `tests/fuzz/test_query_optimizer_fuzz.py` (51 fuzz tests for query planner, cache concurrency, metrics, execution steps).
+
+### Infrastructure
+
+- 14 new source modules — correlation, distributed, acquisition, analyzers, findings, optimizer, performance, export, plugins
+- 10 new test suites — correlation v2 (322), acquisition (358), analyzers (798), distributed (907), export (257), graph (289), optimizer (344), performance (272), plugins (775), distributed fuzz (323), plugin fuzz (390), optimizer fuzz (51), fixture plugins (52)
+- 954 total pytest tests — all passing
+- Flake8, mypy, bandit — all passing
+- Version bumped to 0.8.0
+
 ## [0.7.5] - 2026-05-14
 
 ### Added

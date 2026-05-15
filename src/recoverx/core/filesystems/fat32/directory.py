@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-
 import struct
 
 from recoverx.core.utils.raw_reader import RawReader

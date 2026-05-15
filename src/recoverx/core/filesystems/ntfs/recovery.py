@@ -81,7 +81,8 @@ class NTFSRecovery:
     def find_deleted_non_resident(self, max_records: int = 0) -> list[MFTRecord]:
         all_records = self.walk_mft(max_records)
         return [
-            r for r in all_records
+            r
+            for r in all_records
             if r.is_deleted and r.has_non_resident_data and not r.is_directory
         ]
 
@@ -102,8 +103,8 @@ class NTFSRecovery:
         issues = validate_runlist(resolved, total_clusters, volume_clusters)
         circular_issues = self._check_circular(resolved)
 
-        recoverable_bytes, ok_bytes, lost_bytes = (
-            self._executor.estimate_recoverable_bytes(resolved, nr.real_size)
+        recoverable_bytes, ok_bytes, lost_bytes = self._executor.estimate_recoverable_bytes(
+            resolved, nr.real_size
         )
 
         sparse_info = {}
@@ -133,7 +134,9 @@ class NTFSRecovery:
     # ── Non-Resident Recovery ─────────────────────────────────────────────
 
     def recover_non_resident_file(
-        self, record: MFTRecord, max_bytes: int = 0,
+        self,
+        record: MFTRecord,
+        max_bytes: int = 0,
     ) -> RecoveredNTFSFile:
         nr = record.data_non_resident
         real_size = nr.real_size if nr else 0
@@ -159,11 +162,17 @@ class NTFSRecovery:
         try:
             if is_sparse:
                 data = self._executor.execute_sparse_aware(
-                    nr.data_runs, real_size, nr.initialised_size, max_bytes,
+                    nr.data_runs,
+                    real_size,
+                    nr.initialised_size,
+                    max_bytes,
                 )
             else:
                 data = self._executor.execute(
-                    nr.data_runs, real_size, nr.initialised_size, max_bytes,
+                    nr.data_runs,
+                    real_size,
+                    nr.initialised_size,
+                    max_bytes,
                 )
         except (ValueError, IndexError, OSError) as e:
             recovered.recovery_status = "execution_error"
@@ -191,9 +200,7 @@ class NTFSRecovery:
         recovered.accessed = str(si.accessed) if si and si.accessed else None
 
         if is_fragmented:
-            recovered.recovery_notes.append(
-                f"Recovered from {len(nr.data_runs)} fragments"
-            )
+            recovered.recovery_notes.append(f"Recovered from {len(nr.data_runs)} fragments")
         if is_sparse:
             recovered.recovery_notes.append("File contains sparse regions")
         if recovered.deleted:
@@ -203,7 +210,8 @@ class NTFSRecovery:
         return recovered
 
     def classify_recoverability(
-        self, record: MFTRecord,
+        self,
+        record: MFTRecord,
     ) -> str:
         if not record.has_non_resident_data:
             return "not_applicable"
@@ -220,7 +228,8 @@ class NTFSRecovery:
             return "corrupted"
 
         _, recoverable, lost = self._executor.estimate_recoverable_bytes(
-            resolved, nr.real_size,
+            resolved,
+            nr.real_size,
         )
 
         if lost > 0 and recoverable > 0:
@@ -292,4 +301,5 @@ class NTFSRecovery:
 
     def _check_circular(self, resolved):
         from .runlists.validation import check_circular_runs
+
         return check_circular_runs(resolved)

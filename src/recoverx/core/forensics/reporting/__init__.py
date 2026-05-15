@@ -54,7 +54,7 @@ def events_to_json(events: list[ForensicEvent], indent: int = 2) -> str:
     return json.dumps(
         {
             "report_type": "forensic_timeline",
-            "generated_at": datetime.utcnow().isoformat(),
+            "generated_at": datetime.now().isoformat(),
             "total_events": len(events),
             "events": [e.to_dict() for e in events],
         },
@@ -66,7 +66,7 @@ def events_to_markdown(events: list[ForensicEvent], title: str = "Forensic Timel
     lines: list[str] = []
     lines.append(f"# {title}")
     lines.append("")
-    lines.append(f"**Generated:** {datetime.utcnow().isoformat()}")
+    lines.append(f"**Generated:** {datetime.now().isoformat()}")
     lines.append(f"**Total events:** {len(events)}")
     lines.append("")
 

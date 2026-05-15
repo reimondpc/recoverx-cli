@@ -3,8 +3,8 @@ from __future__ import annotations
 import struct
 
 from recoverx.core.filesystems.ntfs.usn.mapping import map_usn_records, usn_to_event
-from recoverx.core.filesystems.ntfs.usn.records import parse_usn_record, parse_usn_records
 from recoverx.core.filesystems.ntfs.usn.reasons import resolve_usn_reasons
+from recoverx.core.filesystems.ntfs.usn.records import parse_usn_record, parse_usn_records
 
 
 def _make_usn_record_v2(

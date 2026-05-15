@@ -10,8 +10,8 @@ from __future__ import annotations
 
 from recoverx.core.forensics import register_forensic_source
 
-from .usn.parser import USNParser
 from .logfile.parser import LogFileParser
+from .usn.parser import USNParser
 
 register_forensic_source("usn", USNParser, "USN Journal Parser")
 register_forensic_source("logfile", LogFileParser, "$LogFile Transaction Parser")

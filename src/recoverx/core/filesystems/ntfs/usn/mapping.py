@@ -46,70 +46,99 @@ def usn_to_event(record: USNRecord) -> ForensicEvent:
 
     if created:
         event = file_created(
-            ts, filename, mft_ref, parent_ref,
+            ts,
+            filename,
+            mft_ref,
+            parent_ref,
             source=EventSource.USN,
         )
     elif deleted and not close:
         event = file_deleted(
-            ts, filename, mft_ref, parent_ref,
+            ts,
+            filename,
+            mft_ref,
+            parent_ref,
             source=EventSource.USN,
         )
     elif renamed_old:
         event = make_event(
-            EventType.FILE_RENAMED, EventSource.USN, ts,
-            filename=filename, mft_reference=mft_ref,
+            EventType.FILE_RENAMED,
+            EventSource.USN,
+            ts,
+            filename=filename,
+            mft_reference=mft_ref,
             previous_filename="(old name)",  # corrected on RENAME_NEW
             parent_mft_reference=parent_ref,
             confidence=Confidence.HIGH.value,
         )
     elif renamed_new:
         event = make_event(
-            EventType.FILE_RENAMED, EventSource.USN, ts,
-            filename=filename, mft_reference=mft_ref,
+            EventType.FILE_RENAMED,
+            EventSource.USN,
+            ts,
+            filename=filename,
+            mft_reference=mft_ref,
             confidence=Confidence.HIGH.value,
             parent_mft_reference=parent_ref,
         )
     elif modified:
         event = file_modified(
-            ts, filename, mft_ref,
+            ts,
+            filename,
+            mft_ref,
             source=EventSource.USN,
         )
     elif security:
         event = attribute_changed(
-            ts, filename, mft_ref,
+            ts,
+            filename,
+            mft_ref,
             attribute_type="SECURITY_DESCRIPTOR",
             source=EventSource.USN,
         )
     elif basic_info:
         event = attribute_changed(
-            ts, filename, mft_ref,
+            ts,
+            filename,
+            mft_ref,
             attribute_type="BASIC_INFO",
             source=EventSource.USN,
         )
     elif ea:
         event = attribute_changed(
-            ts, filename, mft_ref,
+            ts,
+            filename,
+            mft_ref,
             attribute_type="EA",
             source=EventSource.USN,
         )
     elif overwritten:
         event = make_event(
-            EventType.FILE_OVERWRITTEN, EventSource.USN, ts,
-            filename=filename, mft_reference=mft_ref,
+            EventType.FILE_OVERWRITTEN,
+            EventSource.USN,
+            ts,
+            filename=filename,
+            mft_reference=mft_ref,
             parent_mft_reference=parent_ref,
             confidence=Confidence.MEDIUM.value,
         )
     elif truncated:
         event = make_event(
-            EventType.FILE_TRUNCATED, EventSource.USN, ts,
-            filename=filename, mft_reference=mft_ref,
+            EventType.FILE_TRUNCATED,
+            EventSource.USN,
+            ts,
+            filename=filename,
+            mft_reference=mft_ref,
             parent_mft_reference=parent_ref,
             confidence=Confidence.MEDIUM.value,
         )
     else:
         event = make_event(
-            EventType.JOURNAL_ENTRY, EventSource.USN, ts,
-            filename=filename, mft_reference=mft_ref,
+            EventType.JOURNAL_ENTRY,
+            EventSource.USN,
+            ts,
+            filename=filename,
+            mft_reference=mft_ref,
             parent_mft_reference=parent_ref,
             confidence=Confidence.LOW.value,
             usn_reason_flags=",".join(reason_names),
