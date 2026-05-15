@@ -48,6 +48,8 @@ jobs:
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
       fail-fast: false
+    env:
+      NO_COLOR: "1"
 
     steps:
       - uses: actions/checkout@v4

@@ -1,11 +1,5 @@
 from __future__ import annotations
 
-import os
-
-# Must be set before importing app to prevent Rich/Typer ANSI output
-os.environ["NO_COLOR"] = "1"
-os.environ.pop("FORCE_COLOR", None)
-
 from typer.testing import CliRunner
 
 from recoverx.cli.commands.devices import detect_raw_devices

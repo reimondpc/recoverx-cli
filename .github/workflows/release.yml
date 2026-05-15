@@ -13,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
+    env:
+      NO_COLOR: "1"
     steps:
       - uses: actions/checkout@v4
 
