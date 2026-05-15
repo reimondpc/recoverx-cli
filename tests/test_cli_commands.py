@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from typer.testing import CliRunner
 
 from recoverx.cli.commands.devices import detect_raw_devices
@@ -7,12 +9,18 @@ from recoverx.cli.main import app
 
 runner = CliRunner()
 
+_ANSI_RE = re.compile(r"\x1b\[[0-9;]*[a-zA-Z]")
+
+
+def _strip_ansi(text: str) -> str:
+    return _ANSI_RE.sub("", text)
+
 
 class TestCLICommands:
     def test_help(self):
         result = runner.invoke(app, ["--help"])
         assert result.exit_code == 0
-        assert "recoverx" in result.stdout
+        assert "recoverx" in _strip_ansi(result.stdout)
 
     def test_info_help(self):
         result = runner.invoke(app, ["info", "--help"])
@@ -21,15 +29,16 @@ class TestCLICommands:
     def test_scan_help(self):
         result = runner.invoke(app, ["scan", "--help"])
         assert result.exit_code == 0
-        assert "--threads" in result.stdout
-        assert "--report" in result.stdout
-        assert "--no-mmap" in result.stdout
-        assert "--chunk-size" in result.stdout
+        out = _strip_ansi(result.stdout)
+        assert "--threads" in out
+        assert "--report" in out
+        assert "--no-mmap" in out
+        assert "--chunk-size" in out
 
     def test_devices_help(self):
         result = runner.invoke(app, ["devices", "--help"])
         assert result.exit_code == 0
-        assert "--detailed" in result.stdout
+        assert "--detailed" in _strip_ansi(result.stdout)
 
     def test_detect_raw_devices(self):
         devices = detect_raw_devices()
@@ -40,17 +49,18 @@ class TestCLICommands:
     def test_forensic_help(self):
         result = runner.invoke(app, ["forensic", "--help"])
         assert result.exit_code == 0
-        assert "timeline" in result.stdout
+        assert "timeline" in _strip_ansi(result.stdout)
 
     def test_forensic_timeline_help(self):
         result = runner.invoke(app, ["forensic", "timeline", "--help"])
         assert result.exit_code == 0
-        assert "--since" in result.stdout
-        assert "--until" in result.stdout
-        assert "--format" in result.stdout
-        assert "--output" in result.stdout
-        assert "--limit" in result.stdout
-        assert "--json" in result.stdout
+        out = _strip_ansi(result.stdout)
+        assert "--since" in out
+        assert "--until" in out
+        assert "--format" in out
+        assert "--output" in out
+        assert "--limit" in out
+        assert "--json" in out
 
     def test_forensic_timeline_missing_path(self):
         result = runner.invoke(app, ["forensic", "timeline"])
@@ -65,7 +75,7 @@ class TestCLICommands:
     def test_ntfs_usn_help(self):
         result = runner.invoke(app, ["ntfs", "usn", "--help"])
         assert result.exit_code == 0
-        assert "--json" in result.stdout
+        assert "--json" in _strip_ansi(result.stdout)
 
     def test_ntfs_usn_missing_path(self):
         result = runner.invoke(app, ["ntfs", "usn"])
@@ -76,7 +86,7 @@ class TestCLICommands:
     def test_ntfs_logfile_help(self):
         result = runner.invoke(app, ["ntfs", "logfile", "--help"])
         assert result.exit_code == 0
-        assert "--json" in result.stdout
+        assert "--json" in _strip_ansi(result.stdout)
 
     def test_ntfs_logfile_missing_path(self):
         result = runner.invoke(app, ["ntfs", "logfile"])
@@ -87,12 +97,13 @@ class TestCLICommands:
     def test_forensic_search_help(self):
         result = runner.invoke(app, ["forensic", "search", "--help"])
         assert result.exit_code == 0
-        assert "--name" in result.stdout
-        assert "--event" in result.stdout
-        assert "--hash" in result.stdout
-        assert "--deleted-only" in result.stdout
-        assert "--since" in result.stdout
-        assert "--limit" in result.stdout
+        out = _strip_ansi(result.stdout)
+        assert "--name" in out
+        assert "--event" in out
+        assert "--hash" in out
+        assert "--deleted-only" in out
+        assert "--since" in out
+        assert "--limit" in out
 
     def test_forensic_search_missing_path(self):
         result = runner.invoke(app, ["forensic", "search"])
@@ -101,8 +112,9 @@ class TestCLICommands:
     def test_forensic_query_help(self):
         result = runner.invoke(app, ["forensic", "query", "--help"])
         assert result.exit_code == 0
-        assert "--explain" in result.stdout
-        assert "--limit" in result.stdout
+        out = _strip_ansi(result.stdout)
+        assert "--explain" in out
+        assert "--limit" in out
 
     def test_forensic_query_missing_args(self):
         result = runner.invoke(app, ["forensic", "query"])
@@ -111,8 +123,9 @@ class TestCLICommands:
     def test_forensic_export_help(self):
         result = runner.invoke(app, ["forensic", "export", "--help"])
         assert result.exit_code == 0
-        assert "--format" in result.stdout
-        assert "--output" in result.stdout
+        out = _strip_ansi(result.stdout)
+        assert "--format" in out
+        assert "--output" in out
 
     def test_forensic_export_missing_path(self):
         result = runner.invoke(app, ["forensic", "export"])
@@ -121,7 +134,7 @@ class TestCLICommands:
     def test_forensic_summary_help(self):
         result = runner.invoke(app, ["forensic", "summary", "--help"])
         assert result.exit_code == 0
-        assert "--json" in result.stdout
+        assert "--json" in _strip_ansi(result.stdout)
 
     def test_forensic_summary_bad_path(self):
         result = runner.invoke(app, ["forensic", "summary", "/nonexistent.img"])
@@ -130,7 +143,7 @@ class TestCLICommands:
     def test_forensic_index_help(self):
         result = runner.invoke(app, ["forensic", "index", "--help"])
         assert result.exit_code == 0
-        assert "--force" in result.stdout
+        assert "--force" in _strip_ansi(result.stdout)
 
     def test_forensic_index_missing_path(self):
         result = runner.invoke(app, ["forensic", "index"])
