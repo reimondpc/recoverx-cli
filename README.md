@@ -5,7 +5,7 @@
   </p>
   <p>
     <img src="https://img.shields.io/badge/python-3.10%20|%203.11%20|%203.12-blue?logo=python&logoColor=white" alt="Python 3.10+">
-    <img src="https://img.shields.io/badge/pytest-332%20passing-green?logo=pytest" alt="pytest 332 passing">
+    <img src="https://img.shields.io/badge/pytest-418%20passing-green?logo=pytest" alt="pytest 418 passing">
     <img src="https://img.shields.io/badge/coverage-83%25-yellow?logo=codecov" alt="Coverage 83%">
     <img src="https://img.shields.io/badge/code%20style-black-000000?logo=black" alt="Code style: black">
     <img src="https://img.shields.io/badge/CI-passing-brightgreen?logo=githubactions" alt="CI passing">
@@ -56,12 +56,19 @@ signature.
 - **NTFS recovery CLI** — `recoverx ntfs recover` with `--deleted-only`, `--non-resident-only`, `--verify-hashes`, `--json`, threaded support
 - **NTFS analyse CLI** — `recoverx ntfs analyse --record N` for detailed runlist analysis with validation issues
 - **NTFS CLI** — `recoverx ntfs info`, `mft`, `deleted`, `resident` with `--json` output
-- **Fuzz testing** — 25 fuzz tests protecting binary parsers against corruption, loops, and malicious input
+- **NTFS USN journal parser** — parse `$UsnJrnl` records (V2/V3) with reason flag detection, rename pairing, timeline integration
+- **NTFS $LogFile parser** — restart page parsing, log record extraction, operation type detection
+- **Forensic timeline engine** — event sorting, deduplication, filtering, JSON/CSV/text export
+- **Forensic event abstraction** — unified `ForensicEvent` model with `EventType`, `EventSource`, `Confidence` scoring
+- **Forensic correlation engine** — MFT↔USN matching, rename chain reconstruction, file history tracking
+- **Forensic CLI** — `recoverx forensic timeline <image>` with filtering and format options
+- **Fuzz testing** — 31 fuzz tests (NTFS, USN, LogFile) protecting binary parsers against corruption, loops, and malicious input
+- **Fuzz testing** — 31 fuzz tests protecting binary parsers against corruption, loops, and malicious input
 - **Recovery validation** — precision, recovery rate, metadata integrity, and hash consistency measurements
 - **CI/CD automation** — GitHub Actions with matrix testing (3.10/3.11/3.12), linting, type checking, security scanning
 - **Static analysis** — `mypy` type checking + `bandit` security scanning
 - **Performance profiling** — `Profiler` context manager with CPU, RAM, throughput metrics, JSON export
-- **Testing suite** — 332 pytest tests across all core modules
+- **Testing suite** — 418 pytest tests across all core modules
 
 ## Installation
 
@@ -169,7 +176,9 @@ recoverx/
 │       │   ├── main.py           # Typer app, command registration
 │       │   └── commands/
 │       │       ├── info.py       # recoverx info — disk detection
-│       │       └── scan.py       # recoverx scan — carving pipeline
+│       │       ├── scan.py       # recoverx scan — carving pipeline
+│       │       ├── forensic.py   # recoverx forensic — timeline engine
+│       │       └── ntfs.py       # recoverx ntfs — USN, LogFile, recovery
 │       └── core/
 │           ├── disk/
 │           │   └── detector.py   # psutil + /sys/block enumeration
@@ -192,6 +201,12 @@ recoverx/
 │           ├── benchmark/
 │           │   ├── advanced_benchmark.py # CPU/RAM/throughput metrics
 │           │   └── profiler.py           # Context manager profiler + decorator
+│           ├── forensics/       # Forensic analysis framework
+│           │   ├── models.py    # ForensicEvent, EventType, Confidence
+│           │   ├── events.py    # Event factory functions
+│           │   ├── timeline.py  # Timeline builder, sort, filter, export
+│           │   ├── artifacts.py # Rename/deletion chains, activity summaries
+│           │   └── correlation.py # MFT↔USN matching, cross-source correlation
 │           ├── filesystems/
 │           │   ├── __init__.py   # Filesystem registry (future plugin loading)
 │           │   ├── detector.py   # FAT/NTFS/ext4/exFAT detection
@@ -207,11 +222,22 @@ recoverx/
 │           │       ├── recovery.py
 │           │       ├── structures.py
 │           │       ├── constants.py
-│           │       └── runlists/  # Runlist execution engine
-│           │           ├── mapping.py
-│           │           ├── executor.py
-│           │           ├── sparse.py
-│           │           └── validation.py
+│           │       ├── runlists/  # Runlist execution engine
+│           │       │   ├── mapping.py
+│           │       │   ├── executor.py
+│           │       │   ├── sparse.py
+│           │       │   └── validation.py
+│           │       ├── usn/       # USN Journal parser
+│           │       │   ├── parser.py
+│           │       │   ├── records.py
+│           │       │   ├── reasons.py
+│           │       │   ├── mapping.py
+│           │       │   └── structures.py
+│           │       └── logfile/   # $LogFile parser
+│           │           ├── parser.py
+│           │           ├── records.py
+│           │           ├── restart_area.py
+│           │           └── structures.py
 │           └── utils/
 │               ├── raw_reader.py # Read-only binary reader (offset/sector)
 │               ├── logger.py     # Rich console + file dual logging
@@ -219,7 +245,7 @@ recoverx/
 │               ├── hash_database.py  # Persistent hash storage / dedup
 │               ├── benchmark.py      # ScanBenchmark (elapsed, MB/s)
 │               └── file_utils.py     # format_size helper
-├── tests/                        # pytest suite (332 tests)
+├── tests/                        # pytest suite (418 tests)
 ├── recovered/                    # Carved file output (gitignored)
 ├── logs/                         # Log files (gitignored)
 ├── signatures/                   # Format signature definitions
@@ -296,6 +322,11 @@ class PNGCarver(BaseCarver):
 | NTFS runlist engine      | ✅ Done    |
 | NTFS sparse file support | ✅ Done    |
 | NTFS deleted non-resident recovery | ✅ Done |
+| NTFS USN journal parser  | ✅ Done    |
+| NTFS $LogFile parser     | ✅ Done    |
+| Forensic timeline engine | ✅ Done    |
+| Forensic event abstraction | ✅ Done  |
+| Forensic correlation     | ✅ Done    |
 | SSD/TRIM awareness       | 🔜 Planned |
 | ReFS / APFS support  | 🔜 Planned |
 | GUI (optional)       | 🔜 Planned |

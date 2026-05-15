@@ -34,3 +34,52 @@ class TestCLICommands:
     def test_detect_raw_devices(self):
         devices = detect_raw_devices()
         assert isinstance(devices, list)
+
+    # ── forensic commands ──────────────────────────────────────────────
+
+    def test_forensic_help(self):
+        result = runner.invoke(app, ["forensic", "--help"])
+        assert result.exit_code == 0
+        assert "timeline" in result.stdout
+
+    def test_forensic_timeline_help(self):
+        result = runner.invoke(app, ["forensic", "timeline", "--help"])
+        assert result.exit_code == 0
+        assert "--since" in result.stdout
+        assert "--until" in result.stdout
+        assert "--format" in result.stdout
+        assert "--output" in result.stdout
+        assert "--limit" in result.stdout
+        assert "--json" in result.stdout
+
+    def test_forensic_timeline_missing_path(self):
+        result = runner.invoke(app, ["forensic", "timeline"])
+        assert result.exit_code != 0
+
+    def test_forensic_timeline_bad_path(self):
+        result = runner.invoke(
+            app, ["forensic", "timeline", "/nonexistent/image.raw"]
+        )
+        assert result.exit_code != 0
+
+    # ── NTFS USN command ──────────────────────────────────────────────
+
+    def test_ntfs_usn_help(self):
+        result = runner.invoke(app, ["ntfs", "usn", "--help"])
+        assert result.exit_code == 0
+        assert "--json" in result.stdout
+
+    def test_ntfs_usn_missing_path(self):
+        result = runner.invoke(app, ["ntfs", "usn"])
+        assert result.exit_code != 0
+
+    # ── NTFS LogFile command ──────────────────────────────────────────
+
+    def test_ntfs_logfile_help(self):
+        result = runner.invoke(app, ["ntfs", "logfile", "--help"])
+        assert result.exit_code == 0
+        assert "--json" in result.stdout
+
+    def test_ntfs_logfile_missing_path(self):
+        result = runner.invoke(app, ["ntfs", "logfile"])
+        assert result.exit_code != 0

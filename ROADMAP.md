@@ -99,7 +99,20 @@ document — priorities shift based on community feedback and real-world testing
 - [x] **MFT record enhancements** — `has_non_resident_data`, `is_fragmented`, `data_non_resident`
 - [x] **332 tests** — flake8 / mypy / bandit clean (58 source files)
 
-## v0.7.0 — Fragmented & Advanced Recovery 🔜
+## v0.7.0 — NTFS Journaling & Timeline Forensics ✅
+
+- [x] **Forensic Event Abstraction Layer** — `ForensicEvent` base class, `EventType`/`EventSource`/`Confidence` enums, factory functions
+- [x] **Timeline Engine** — chronological sorting, dedup, filter, JSON/CSV/text export, metadata tracking
+- [x] **Correlation Engine** — MFT↔USN matching, rename chains, file history, confidence scoring
+- [x] **USN Journal Parser** — $UsnJrnl V2/V3 record parsing, 24 reason flags, live image reading
+- [x] **USN → ForensicEvent mapping** — create/delete/rename/modify/security/close events from USN
+- [x] **$LogFile Foundation** — restart pages (RSTR), log records (RCRD), 16 operation types, target MFT extraction
+- [x] **Forensic CLI** — `recoverx forensic timeline`, `recoverx ntfs usn`, `recoverx ntfs logfile`
+- [x] **Forensic reporting** — JSON timeline, CSV export, chronological text output
+- [x] **Forensic test suite** — 78 new tests (unit + fuzz)
+- [x] **Architecture registries** — `FORENSIC_REGISTRY` integration
+
+## v0.7.5 — Advanced Journaling & Correlation 🔜
 
 - [ ] **Bifragment gap carving** — locate header and footer with known gap
 - [ ] **Smart fragment reassembly** — scoring/ranking candidate fragments
@@ -137,4 +150,4 @@ document — priorities shift based on community feedback and real-world testing
 
 ---
 
-_Last updated: 2026-05-14_ (v0.6.5 completed)
+_Last updated: 2026-05-14_ (v0.7.0 completed)

@@ -26,6 +26,7 @@ logs/
 .ruff_cache/
 htmlcov/
 .coverage
+coverage.xml
 
 # IDE
 .vscode/

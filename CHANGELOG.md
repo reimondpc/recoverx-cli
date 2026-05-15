@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-05-14
+
+### Added
+
+- **Forensic Event Abstraction Layer** — `core/forensics/` package with `ForensicEvent` dataclass, `EventType`/`EventSource`/`Confidence` enums, event factory functions, timeline builder, correlation engine, artifact extractors, forensic source registry
+- **USN Journal Parser** — `ntfs/usn/` subpackage with `USNRecord` V2/V3 parsing, USN reason flags (create/delete/rename/modify/security/close), `USNParser` class reading from live disk images via `$Extend\$UsnJrnl`, raw record iteration
+- **USN → ForensicEvent mapping** — `usn/mapping.py` translates USN records to unified forensic events with rename-pair correlation, close detection, confidence scoring
+- **$LogFile Foundation** — `ntfs/logfile/` subpackage with restart page parsing (RSTR), restart area extraction, log record parsing (RCRD), 16 operation types (InitializeFileRecord, UpdateResidentValue, UpdateMappingPairs, etc.), basic target MFT reference extraction
+- **Timeline Engine** — chronological sorting, deduplication, event filtering (type/source/MFT/time/confidence), `to_json()`/`to_csv()`/`print_chronological()` export, comprehensive metadata tracking
+- **Forensic Correlation Engine** — MFT↔USN cross-source matching within configurable time windows, rename chain reconstruction, file history tracking, confidence boosting on correlation
+- **Forensic CLI** — `recoverx forensic timeline <image>` with `--since`, `--until`, `--format`, `--output`, `--limit`, `--json` options; chronological output with source tagging
+- **NTFS USN CLI** — `recoverx ntfs usn <image>` with table output, reason flag display, JSON export
+- **NTFS LogFile CLI** — `recoverx ntfs logfile <image>` with restart area info, log record listing, operation type display, JSON export
+- **Forensic test suite** — 78 new tests (24 forensic events/timeline, 20 USN parsing, 16 LogFile parsing, 18 fuzz: 11 USN + 7 LogFile)
+- **Fuzz testing** — malformed USN records, corrupted LogFile pages, extreme LSNs, oversized filenames, boundary conditions, random corruption — all with bounded memory and no infinite loops
+
+### Infrastructure
+
+- 418 total pytest tests (78 forensic + fuzz + 8 CLI integration)
+- Flake8, mypy, bandit — all passing
+- Version bumped to 0.7.0
+
 ## [0.6.5] - 2026-05-14
 
 ### Added

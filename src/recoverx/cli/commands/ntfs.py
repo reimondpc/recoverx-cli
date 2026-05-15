@@ -463,3 +463,123 @@ def analyse(
                     f"LCN {br['lcn']} ({format_size(br['byte_length'])}) "
                     f"@ offset {format_size(br['byte_offset'])}"
                 )
+
+
+@ntfs_app.command()
+def usn(
+    path: str = typer.Argument(..., help="Path to NTFS disk image or device."),
+    limit: int = typer.Option(50, "--limit", "-n", help="Max USN records."),
+    json_output: bool = typer.Option(False, "--json", help="Output as JSON."),
+) -> None:
+    """Parse USN journal entries from $UsnJrnl."""
+    console = Console()
+    with RawReader(path) as reader:
+        sector0 = reader.read_at(0, 512)
+        bpb = parse_boot_sector(sector0)
+        if bpb is None:
+            console.print("[red]Error:[/red] Not a valid NTFS boot sector.")
+            raise typer.Exit(code=1)
+
+        from recoverx.core.filesystems.ntfs.usn.parser import USNParser
+
+        parser = USNParser(reader, bpb)
+        records = parser.parse_raw()
+
+        if not records:
+            console.print("[yellow]No USN records found.[/yellow]")
+            return
+
+        if limit > 0:
+            records = records[:limit]
+
+        if json_output:
+            console.print(json.dumps(
+                {"usn_records": [r.to_dict() for r in records]}, indent=2,
+            ))
+            return
+
+        console.print(
+            f"[bold cyan]USN Journal[/bold cyan] — "
+            f"[yellow]{len(records)} records[/yellow]\n"
+        )
+
+        table = Table(border_style="cyan")
+        table.add_column("USN", style="white", justify="right")
+        table.add_column("Timestamp", style="cyan")
+        table.add_column("File", style="yellow")
+        table.add_column("Reasons")
+        table.add_column("MFT Ref", justify="right")
+
+        for r in records:
+            ts = r.timestamp.strftime("%Y-%m-%d %H:%M:%S") if r.timestamp else "-"
+            reasons = ", ".join(
+                n.replace("USN_REASON_", "")[:20] for n in r.reason_names[:3]
+            )
+            table.add_row(
+                str(r.usn),
+                ts,
+                r.file_name or "-",
+                reasons,
+                str(r.file_reference),
+            )
+
+        console.print(table)
+
+
+@ntfs_app.command()
+def logfile(
+    path: str = typer.Argument(..., help="Path to NTFS disk image or device."),
+    limit: int = typer.Option(50, "--limit", "-n", help="Max log records."),
+    json_output: bool = typer.Option(False, "--json", help="Output as JSON."),
+) -> None:
+    """Parse $LogFile transaction records."""
+    console = Console()
+    with RawReader(path) as reader:
+        sector0 = reader.read_at(0, 512)
+        bpb = parse_boot_sector(sector0)
+        if bpb is None:
+            console.print("[red]Error:[/red] Not a valid NTFS boot sector.")
+            raise typer.Exit(code=1)
+
+        from recoverx.core.filesystems.ntfs.logfile.parser import LogFileParser
+
+        parser = LogFileParser(reader, bpb)
+        result = parser.parse()
+
+        if not result["found"]:
+            console.print("[yellow]No $LogFile data found.[/yellow]")
+            return
+
+        if json_output:
+            console.print(json.dumps(result, indent=2, default=str))
+            return
+
+        console.print(
+            f"[bold cyan]$LogFile Analysis[/bold cyan]\n"
+        )
+        console.print(f"  Pages:         {result['page_count']}")
+        console.print(f"  Page Size:     {result['page_size']} bytes")
+        console.print(f"  Restart Pages: {len(result['restart_pages'])}")
+        console.print(f"  Log Records:   {result['total_records_found']}")
+
+        if result["restart_areas"]:
+            console.print("\n[bold]Restart Areas:[/bold]")
+            for ra in result["restart_areas"]:
+                console.print(f"  Last LSN: {ra['last_lsn']}  Oldest LSN: {ra['oldest_lsn']}")
+
+        if result["records"]:
+            console.print(f"\n[bold]Log Records ({min(limit, len(result['records']))} shown):[/bold]")
+            table = Table(border_style="yellow")
+            table.add_column("LSN", style="white", justify="right")
+            table.add_column("Type", style="cyan")
+            table.add_column("Operation", style="yellow")
+            table.add_column("MFT Ref", justify="right")
+
+            for rec in result["records"][:limit]:
+                table.add_row(
+                    str(rec["lsn"]),
+                    rec["record_type_name"][:20],
+                    rec["redo_operation"][:20],
+                    str(rec["target_mft"]),
+                )
+            console.print(table)
