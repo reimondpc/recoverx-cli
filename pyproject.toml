@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68.0"]
+requires = ["setuptools>=68.0,<77"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,13 +8,38 @@ version = "0.8.0"
 description = "Professional file recovery and carving tool for disk images and block devices"
 readme = "README.md"
 license = { text = "MIT" }
-keywords = ["forensics", "file-recovery", "carving", "data-recovery", "disk-imaging"]
+authors = [
+    { name = "Reimond Pena", email = "elderreimondpena@gmail.com" },
+]
+keywords = ["forensics", "file-recovery", "carving", "data-recovery", "disk-imaging", "ntfs", "fat32"]
 requires-python = ">=3.10"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: System Administrators",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+    "Topic :: Security",
+    "Topic :: System :: Filesystems",
+    "Topic :: Utilities",
+]
 dependencies = [
     "typer>=0.12.0",
     "rich>=13.7.0",
     "psutil>=5.9.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/reimondpc/recoverx-cli"
+Repository = "https://github.com/reimondpc/recoverx-cli"
+Issues = "https://github.com/reimondpc/recoverx-cli/issues"
+Documentation = "https://github.com/reimondpc/recoverx-cli#readme"
+Changelog = "https://github.com/reimondpc/recoverx-cli/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 dev = [
