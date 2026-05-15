@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.5] - 2026-05-14
+
+### Added
+
+- **Forensic Indexing Engine** — `core/indexing/` package with SQLite-backed persistence for forensic events, artifacts, file records, hashes, timelines, and correlations. Includes schema management with migrations, WAL-mode storage backend, bounded LRU cache, and transaction batching for high-throughput inserts.
+- **Forensic Query Engine** — `core/query/` package with a simple forensic query language supporting `==`, `!=`, `>`, `<`, `contains`, `starts with`, `ends with`, `~` (regex) operators, AND/OR/NOT combinators, and AST-to-SQL translation via `FilterBuilder`.
+- **Artifact Abstraction Layer** — `core/artifacts/` with `Artifact`, `FileArtifact`, `TimelineArtifact`, `JournalArtifact`, `DeletedArtifact`, `HashArtifact` for structured evidence representation.
+- **Investigation Workflows** — `core/cases/` package with `CaseManager` (create/list/close/reopen/delete), bookmarks, saved queries, artifact tagging, and case notes. Persisted via SQLite.
+- **Advanced Correlation** — delete/recreate detection, cross-source MFT↔USN matching, parent movement tracking, timestamp anomaly detection, orphan event reconstruction.
+- **Forensic Reporting** — CSV, JSON, Markdown export; investigation summary and correlation report generation.
+- **Forensic Registry (expanded)** — registration for sources, query engines, index backends, artifact providers, report exporters.
+- **CLI Commands** — `recoverx forensic search` (filter by name/event/source/hash/MFT/deleted/time range), `recoverx forensic query` (forensic query language), `recoverx forensic export` (JSON/CSV/Markdown), `recoverx forensic summary`, `recoverx forensic index`, `recoverx forensic index-stats`.
+- **Shared CLI sources module** — `cli/commands/sources.py` extracting MFT/USN collection logic for CLI reuse.
+
+### Infrastructure
+
+- 6 new test suites — indexing (10), query (14), cases (10), advanced correlation (8), reporting (6), query fuzz (6)
+- 485 total pytest tests — all passing
+- Flake8, mypy, bandit — all passing across 23 new source files
+- Schema version 1 with integrity checking and migration support
+- Version bumped to 0.7.5
+
 ## [0.7.0] - 2026-05-14
 
 ### Added

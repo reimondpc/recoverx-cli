@@ -4,15 +4,21 @@ import os
 import tempfile
 
 from recoverx.core.filesystems.ntfs.runlists.mapping import (
-    DataRun, resolve_runlist, vcn_to_lcn, runs_to_byte_offsets,
+    DataRun,
+    resolve_runlist,
+    vcn_to_lcn,
+    runs_to_byte_offsets,
 )
 from recoverx.core.filesystems.ntfs.runlists.executor import RunlistExecutor
 from recoverx.core.filesystems.ntfs.runlists.sparse import (
-    SparseHandler, is_sparse_runlist, count_sparse_regions,
+    SparseHandler,
+    is_sparse_runlist,
+    count_sparse_regions,
     count_allocated_regions,
 )
 from recoverx.core.filesystems.ntfs.runlists.validation import (
-    validate_runlist, check_circular_runs,
+    validate_runlist,
+    check_circular_runs,
 )
 from recoverx.core.filesystems.ntfs.structures import NTFSBootSector
 from recoverx.core.utils.raw_reader import RawReader
@@ -224,9 +230,7 @@ class TestRunlistExecutor:
         try:
             executor = RunlistExecutor(reader, bpb)
             runs = [{"cluster_count": 10, "cluster_offset": 0}]
-            total, rec, lost = executor.estimate_recoverable_bytes(
-                resolve_runlist(runs, bpb), 5120
-            )
+            total, rec, lost = executor.estimate_recoverable_bytes(resolve_runlist(runs, bpb), 5120)
             assert total == 5120
             assert rec == 5120
             assert lost == 0
@@ -241,9 +245,7 @@ class TestRunlistExecutor:
         try:
             executor = RunlistExecutor(reader, bpb)
             runs = [{"cluster_count": 10, "cluster_offset": 0}]
-            total, rec, lost = executor.estimate_recoverable_bytes(
-                resolve_runlist(runs, bpb), 5120
-            )
+            total, rec, lost = executor.estimate_recoverable_bytes(resolve_runlist(runs, bpb), 5120)
             assert total == 5120
             assert rec == 512
             assert lost > 0
@@ -294,10 +296,12 @@ class TestSparseHandler:
         assert not is_sparse_runlist([non_sparse])
         assert is_sparse_runlist([sparse])
         assert not is_sparse_runlist([zero_off])
-        assert is_sparse_runlist([
-            {"cluster_count": 5, "cluster_offset": 100, "is_sparse": False},
-            {"cluster_count": 5, "cluster_offset": 0, "is_sparse": True},
-        ])
+        assert is_sparse_runlist(
+            [
+                {"cluster_count": 5, "cluster_offset": 100, "is_sparse": False},
+                {"cluster_count": 5, "cluster_offset": 0, "is_sparse": True},
+            ]
+        )
 
     def test_count_sparse_regions(self):
         runs = [

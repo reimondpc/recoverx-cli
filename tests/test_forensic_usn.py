@@ -32,7 +32,7 @@ def _make_usn_record_v2(
     struct.pack_into("<I", data, 52, 0)
     struct.pack_into("<H", data, 56, fn_length)
     struct.pack_into("<H", data, 58, fn_offset)
-    data[fn_offset:fn_offset + fn_length] = name_bytes
+    data[fn_offset : fn_offset + fn_length] = name_bytes
     return bytes(data)
 
 

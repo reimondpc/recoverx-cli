@@ -292,9 +292,7 @@ class TestFAT32FuzzMemorySafety:
             data = b"\x00" * size
             reader = _FakeReader(data, len(data))
             total_sec = size // 512 if size >= 512 else 0
-            bpb = FAT32BootSector(
-                bytes_per_sector=512, fat_size_sectors=1, total_sectors=total_sec
-            )
+            bpb = FAT32BootSector(bytes_per_sector=512, fat_size_sectors=1, total_sectors=total_sec)
             try:
                 get_next_cluster(reader, bpb, 2)
             except Exception:

@@ -77,7 +77,9 @@ def test_parse_log_record():
     assert record is not None
     assert record.lsn == 42
     assert record.record_type_name in (
-        "UpdateResidentValue", "CreateAttribute", "UpdateNonresidentValue",
+        "UpdateResidentValue",
+        "CreateAttribute",
+        "UpdateNonresidentValue",
     )
 
 
@@ -136,8 +138,11 @@ def test_log_record_to_dict():
 
 def test_log_file_header_to_dict():
     header = LogFileHeader(
-        signature="RSTR", usa_offset=48, usa_size=3,
-        last_lsn=200, page_size=4096,
+        signature="RSTR",
+        usa_offset=48,
+        usa_size=3,
+        last_lsn=200,
+        page_size=4096,
     )
     d = header.to_dict()
     assert d["signature"] == "RSTR"

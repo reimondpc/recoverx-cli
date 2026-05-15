@@ -213,8 +213,11 @@ def test_extract_rename_chain():
 def test_make_event_with_kwargs():
     ts = datetime(2026, 5, 14, 10, 0, 0, tzinfo=timezone.utc)
     event = make_event(
-        EventType.JOURNAL_ENTRY, EventSource.LOGFILE, ts,
-        filename="log.dat", notes=["Test note"],
+        EventType.JOURNAL_ENTRY,
+        EventSource.LOGFILE,
+        ts,
+        filename="log.dat",
+        notes=["Test note"],
     )
     assert event.event_type == EventType.JOURNAL_ENTRY
     assert event.source == EventSource.LOGFILE

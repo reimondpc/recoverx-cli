@@ -35,9 +35,7 @@ def create_fragmented_image(path: str, num_files: int = 50) -> str:
     from tests.fat32.create_fat32_image import create_fat32_image
 
     files = [(f"FRAG_{i:03d}.DAT", os.urandom(random.randint(100, 5000))) for i in range(num_files)]
-    return create_fat32_image(
-        path, files=files, deleted_files=[], subdirs=["DEEP/DIR/SUBDIR"]
-    )
+    return create_fat32_image(path, files=files, deleted_files=[], subdirs=["DEEP/DIR/SUBDIR"])
 
 
 def create_deep_directory_image(path: str, depth: int = 20) -> str:
@@ -67,13 +65,15 @@ def create_fat_loop_image(path: str) -> str:
     """Create image with a FAT entry that loops to itself."""
     from tests.fat32.create_fat32_image import create_fat32_image
 
-    img_path = create_fat32_image(
-        path, files=[("LOOP.DAT", b"A" * 512)], deleted_files=[]
-    )
+    img_path = create_fat32_image(path, files=[("LOOP.DAT", b"A" * 512)], deleted_files=[])
     with open(img_path, "r+b") as f:
         bp = FAT32BootSector(
-            bytes_per_sector=512, sectors_per_cluster=1, reserved_sectors=32,
-            fat_count=2, fat_size_sectors=8, total_sectors=51200,
+            bytes_per_sector=512,
+            sectors_per_cluster=1,
+            reserved_sectors=32,
+            fat_count=2,
+            fat_size_sectors=8,
+            total_sectors=51200,
         )
         fat_off = bp.fat_start + 3 * 4
         f.seek(fat_off)
@@ -92,8 +92,12 @@ def create_orphan_cluster_image(path: str) -> str:
         f.seek(512 * 200)
         f.write(b"ORPHAN CLUSTER DATA " * 100)
         bp = FAT32BootSector(
-            bytes_per_sector=512, sectors_per_cluster=1, reserved_sectors=32,
-            fat_count=2, fat_size_sectors=8, total_sectors=51200,
+            bytes_per_sector=512,
+            sectors_per_cluster=1,
+            reserved_sectors=32,
+            fat_count=2,
+            fat_size_sectors=8,
+            total_sectors=51200,
         )
         fat_off = bp.fat_start + 50 * 4
         f.seek(fat_off)

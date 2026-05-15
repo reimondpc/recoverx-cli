@@ -11,17 +11,24 @@ import struct
 
 from recoverx.core.filesystems.ntfs.boot_sector import parse_boot_sector, validate_boot_sector
 from recoverx.core.filesystems.ntfs.attributes import (
-    parse_attributes, parse_attribute_header, parse_runlist,
+    parse_attributes,
+    parse_attribute_header,
+    parse_runlist,
 )
 from recoverx.core.filesystems.ntfs.mft import (
-    parse_mft_record, parse_mft_record_header, apply_fixups,
+    parse_mft_record,
+    parse_mft_record_header,
+    apply_fixups,
 )
 from recoverx.core.filesystems.ntfs.structures import NTFSBootSector
 from recoverx.core.filesystems.ntfs.runlists.mapping import (
-    resolve_runlist, vcn_to_lcn, DataRun,
+    resolve_runlist,
+    vcn_to_lcn,
+    DataRun,
 )
 from recoverx.core.filesystems.ntfs.runlists.validation import (
-    validate_runlist, check_circular_runs,
+    validate_runlist,
+    check_circular_runs,
 )
 from recoverx.core.filesystems.ntfs.runlists.sparse import SparseHandler
 
@@ -237,43 +244,56 @@ class TestNTFSFuzzRunlists:
         for _ in range(50):
             runs: list[dict] = []
             for _ in range(random.randint(2, 20)):
-                runs.append({
-                    "cluster_count": random.randint(1, 10),
-                    "cluster_offset": random.choice([-5, -3, -1, 0, 1, 3, 5, 10, 100, -100]),
-                })
+                runs.append(
+                    {
+                        "cluster_count": random.randint(1, 10),
+                        "cluster_offset": random.choice([-5, -3, -1, 0, 1, 3, 5, 10, 100, -100]),
+                    }
+                )
             resolved = []
             current_lcn = 0
             for r in runs:
                 current_lcn += r["cluster_offset"]
-                resolved.append(DataRun(
-                    vcn_start=0, vcn_end=r["cluster_count"] - 1,
-                    lcn=current_lcn, cluster_count=r["cluster_count"],
-                    is_sparse=r["cluster_offset"] == 0,
-                ))
+                resolved.append(
+                    DataRun(
+                        vcn_start=0,
+                        vcn_end=r["cluster_count"] - 1,
+                        lcn=current_lcn,
+                        cluster_count=r["cluster_count"],
+                        is_sparse=r["cluster_offset"] == 0,
+                    )
+                )
             issues = check_circular_runs(resolved)
             assert isinstance(issues, list)
 
     def test_fuzz_validation_extreme(self):
         for _ in range(50):
-            runs = [DataRun(
-                vcn_start=random.randint(-1000, 1000),
-                vcn_end=random.randint(-1000, 1000),
-                lcn=random.randint(-1000000, 1000000),
-                cluster_count=random.randint(0, 1000000),
-                is_sparse=random.choice([True, False]),
-            ) for _ in range(random.randint(1, 10))]
+            runs = [
+                DataRun(
+                    vcn_start=random.randint(-1000, 1000),
+                    vcn_end=random.randint(-1000, 1000),
+                    lcn=random.randint(-1000000, 1000000),
+                    cluster_count=random.randint(0, 1000000),
+                    is_sparse=random.choice([True, False]),
+                )
+                for _ in range(random.randint(1, 10))
+            ]
             issues = validate_runlist(runs, random.randint(0, 1000), random.randint(0, 10000))
             assert isinstance(issues, list)
 
     def test_fuzz_sparse_handler(self):
         handler = SparseHandler(random.choice([256, 512, 1024, 4096]))
         for _ in range(50):
-            runs = [DataRun(
-                vcn_start=0, vcn_end=random.randint(0, 100),
-                lcn=random.choice([-1, random.randint(0, 10000)]),
-                cluster_count=random.randint(1, 100),
-                is_sparse=random.choice([True, False]),
-            ) for _ in range(random.randint(1, 10))]
+            runs = [
+                DataRun(
+                    vcn_start=0,
+                    vcn_end=random.randint(0, 100),
+                    lcn=random.choice([-1, random.randint(0, 10000)]),
+                    cluster_count=random.randint(1, 100),
+                    is_sparse=random.choice([True, False]),
+                )
+                for _ in range(random.randint(1, 10))
+            ]
             try:
                 desc = handler.describe(runs)
                 assert isinstance(desc, dict)
@@ -282,9 +302,14 @@ class TestNTFSFuzzRunlists:
 
     def test_fuzz_zero_cluster_count_validation(self):
         for _ in range(30):
-            runs = [DataRun(
-                vcn_start=0, vcn_end=-1, lcn=0,
-                cluster_count=0, is_sparse=False,
-            )]
+            runs = [
+                DataRun(
+                    vcn_start=0,
+                    vcn_end=-1,
+                    lcn=0,
+                    cluster_count=0,
+                    is_sparse=False,
+                )
+            ]
             issues = validate_runlist(runs, 0)
             assert isinstance(issues, list)

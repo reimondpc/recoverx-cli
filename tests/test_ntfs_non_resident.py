@@ -7,7 +7,10 @@ import tempfile
 from recoverx.core.filesystems.ntfs.boot_sector import parse_boot_sector
 from recoverx.core.filesystems.ntfs.recovery import NTFSRecovery
 from recoverx.core.filesystems.ntfs.structures import (
-    NTFSBootSector, NonResidentAttribute, MFTRecord, MFTRecordHeader,
+    NTFSBootSector,
+    NonResidentAttribute,
+    MFTRecord,
+    MFTRecordHeader,
 )
 from recoverx.core.utils.raw_reader import RawReader
 
@@ -76,15 +79,20 @@ class TestNonResidentRecovery:
             rec = NTFSRecovery(reader, bpb)
             runs = [{"cluster_count": 5, "cluster_offset": 0, "is_sparse": False}]
             nr = NonResidentAttribute(
-                attr_type=0x80, non_resident=True,
-                starting_vcn=0, last_vcn=4,
-                runlist_offset=64, real_size=500,
-                allocated_size=5 * 512, initialised_size=500,
+                attr_type=0x80,
+                non_resident=True,
+                starting_vcn=0,
+                last_vcn=4,
+                runlist_offset=64,
+                real_size=500,
+                allocated_size=5 * 512,
+                initialised_size=500,
                 data_runs=runs,
             )
             record = MFTRecord(
                 header=MFTRecordHeader(signature="FILE", flags=0x0001, mft_record_number=5),
-                resident=False, data_non_resident=nr,
+                resident=False,
+                data_non_resident=nr,
             )
             result = rec.recover_non_resident_file(record)
             assert result.resident is False
@@ -111,15 +119,20 @@ class TestNonResidentRecovery:
                 {"cluster_count": 1, "cluster_offset": 1, "is_sparse": False},
             ]
             nr = NonResidentAttribute(
-                attr_type=0x80, non_resident=True,
-                starting_vcn=0, last_vcn=2,
-                runlist_offset=64, real_size=1536,
-                allocated_size=3 * 512, initialised_size=1536,
+                attr_type=0x80,
+                non_resident=True,
+                starting_vcn=0,
+                last_vcn=2,
+                runlist_offset=64,
+                real_size=1536,
+                allocated_size=3 * 512,
+                initialised_size=1536,
                 data_runs=runs,
             )
             record = MFTRecord(
                 header=MFTRecordHeader(signature="FILE", flags=0x0001, mft_record_number=5),
-                resident=False, data_non_resident=nr,
+                resident=False,
+                data_non_resident=nr,
             )
             result = rec.recover_non_resident_file(record)
             assert result.recovery_status == "recovered"
@@ -142,15 +155,20 @@ class TestNonResidentRecovery:
                 {"cluster_count": 1, "cluster_offset": 2, "is_sparse": False},
             ]
             nr = NonResidentAttribute(
-                attr_type=0x80, non_resident=True,
-                starting_vcn=0, last_vcn=4,
-                runlist_offset=64, real_size=5 * 512,
-                allocated_size=2 * 512, initialised_size=5 * 512,
+                attr_type=0x80,
+                non_resident=True,
+                starting_vcn=0,
+                last_vcn=4,
+                runlist_offset=64,
+                real_size=5 * 512,
+                allocated_size=2 * 512,
+                initialised_size=5 * 512,
                 data_runs=runs,
             )
             record = MFTRecord(
                 header=MFTRecordHeader(signature="FILE", flags=0x0001, mft_record_number=5),
-                resident=False, data_non_resident=nr,
+                resident=False,
+                data_non_resident=nr,
             )
             result = rec.recover_non_resident_file(record)
             assert result.recovery_status == "recovered"
@@ -167,9 +185,7 @@ class TestNonResidentRecovery:
         reader = _make_reader(data)
         try:
             rec = NTFSRecovery(reader, bpb)
-            record = _make_non_resident_record(
-                [(1, 0)], len(data), data, deleted=True
-            )
+            record = _make_non_resident_record([(1, 0)], len(data), data, deleted=True)
             record.header.flags = 0x0000
             result = rec.recover_non_resident_file(record)
             assert result.recovery_status == "recovered"
@@ -183,7 +199,8 @@ class TestNonResidentRecovery:
         bpb = _make_bpb()
         record = MFTRecord(
             header=MFTRecordHeader(signature="FILE", flags=0x0001, mft_record_number=5),
-            resident=True, data_resident=b"hello",
+            resident=True,
+            data_resident=b"hello",
         )
         with tempfile.NamedTemporaryFile() as f:
             f.write(b"x" * 4096)
@@ -215,9 +232,7 @@ class TestNonResidentRecovery:
         reader = _make_reader(b"X" * 512)
         try:
             rec = NTFSRecovery(reader, bpb)
-            record = _make_non_resident_record(
-                [(10, 0)], 5120, b"X" * 512
-            )
+            record = _make_non_resident_record([(10, 0)], 5120, b"X" * 512)
             status = rec.classify_recoverability(record)
             assert status in ("corrupted", "partially_recoverable")
         finally:
@@ -271,15 +286,20 @@ class TestNonResidentRecovery:
                 {"cluster_count": 3, "cluster_offset": 4, "is_sparse": False},
             ]
             nr = NonResidentAttribute(
-                attr_type=0x80, non_resident=True,
-                starting_vcn=0, last_vcn=9,
-                runlist_offset=64, real_size=10 * 512,
-                allocated_size=10 * 512, initialised_size=10 * 512,
+                attr_type=0x80,
+                non_resident=True,
+                starting_vcn=0,
+                last_vcn=9,
+                runlist_offset=64,
+                real_size=10 * 512,
+                allocated_size=10 * 512,
+                initialised_size=10 * 512,
                 data_runs=run_list,
             )
             record = MFTRecord(
                 header=MFTRecordHeader(signature="FILE", flags=0x0001, mft_record_number=5),
-                resident=False, data_non_resident=nr,
+                resident=False,
+                data_non_resident=nr,
             )
             analysis = rec.analyse_runs(record)
             assert analysis["has_runs"]
@@ -297,7 +317,9 @@ class TestNonResidentRecovery:
         try:
             rec = NTFSRecovery(reader, bpb)
             record = _make_non_resident_record(
-                [(5, 0)], len(original), original,
+                [(5, 0)],
+                len(original),
+                original,
             )
             result = rec.recover_non_resident_file(record)
             assert result.data == original

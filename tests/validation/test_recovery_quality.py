@@ -108,6 +108,7 @@ class TestRecoveryQuality:
 
     def _get_bpb(self, reader):
         from recoverx.core.filesystems.fat32.boot_sector import parse_boot_sector
+
         sector0 = reader.read_at(0, 512)
         bpb = parse_boot_sector(sector0)
         assert bpb is not None
@@ -137,7 +138,9 @@ class TestRecoveryQuality:
                             recovered_count += 1
                             for orig_name, orig_data in files_data:
                                 if e.short_name == orig_name:
-                                    result_hash = self._compute_sha256(result.data[:len(orig_data)])
+                                    result_hash = self._compute_sha256(
+                                        result.data[: len(orig_data)]
+                                    )
                                     if result_hash == self._compute_sha256(orig_data):
                                         match_count += 1
                                     break

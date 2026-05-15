@@ -57,9 +57,7 @@ class TestCLICommands:
         assert result.exit_code != 0
 
     def test_forensic_timeline_bad_path(self):
-        result = runner.invoke(
-            app, ["forensic", "timeline", "/nonexistent/image.raw"]
-        )
+        result = runner.invoke(app, ["forensic", "timeline", "/nonexistent/image.raw"])
         assert result.exit_code != 0
 
     # ── NTFS USN command ──────────────────────────────────────────────
@@ -82,4 +80,66 @@ class TestCLICommands:
 
     def test_ntfs_logfile_missing_path(self):
         result = runner.invoke(app, ["ntfs", "logfile"])
+        assert result.exit_code != 0
+
+    # ── new v0.7.5 forensic commands ─────────────────────────────────
+
+    def test_forensic_search_help(self):
+        result = runner.invoke(app, ["forensic", "search", "--help"])
+        assert result.exit_code == 0
+        assert "--name" in result.stdout
+        assert "--event" in result.stdout
+        assert "--hash" in result.stdout
+        assert "--deleted-only" in result.stdout
+        assert "--since" in result.stdout
+        assert "--limit" in result.stdout
+
+    def test_forensic_search_missing_path(self):
+        result = runner.invoke(app, ["forensic", "search"])
+        assert result.exit_code != 0
+
+    def test_forensic_query_help(self):
+        result = runner.invoke(app, ["forensic", "query", "--help"])
+        assert result.exit_code == 0
+        assert "--explain" in result.stdout
+        assert "--limit" in result.stdout
+
+    def test_forensic_query_missing_args(self):
+        result = runner.invoke(app, ["forensic", "query"])
+        assert result.exit_code != 0
+
+    def test_forensic_export_help(self):
+        result = runner.invoke(app, ["forensic", "export", "--help"])
+        assert result.exit_code == 0
+        assert "--format" in result.stdout
+        assert "--output" in result.stdout
+
+    def test_forensic_export_missing_path(self):
+        result = runner.invoke(app, ["forensic", "export"])
+        assert result.exit_code != 0
+
+    def test_forensic_summary_help(self):
+        result = runner.invoke(app, ["forensic", "summary", "--help"])
+        assert result.exit_code == 0
+        assert "--json" in result.stdout
+
+    def test_forensic_summary_bad_path(self):
+        result = runner.invoke(app, ["forensic", "summary", "/nonexistent.img"])
+        assert result.exit_code != 0
+
+    def test_forensic_index_help(self):
+        result = runner.invoke(app, ["forensic", "index", "--help"])
+        assert result.exit_code == 0
+        assert "--force" in result.stdout
+
+    def test_forensic_index_missing_path(self):
+        result = runner.invoke(app, ["forensic", "index"])
+        assert result.exit_code != 0
+
+    def test_forensic_index_stats_help(self):
+        result = runner.invoke(app, ["forensic", "index-stats", "--help"])
+        assert result.exit_code == 0
+
+    def test_forensic_index_stats_missing_path(self):
+        result = runner.invoke(app, ["forensic", "index-stats"])
         assert result.exit_code != 0

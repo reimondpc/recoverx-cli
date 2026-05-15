@@ -61,14 +61,19 @@ signature.
 - **Forensic timeline engine** — event sorting, deduplication, filtering, JSON/CSV/text export
 - **Forensic event abstraction** — unified `ForensicEvent` model with `EventType`, `EventSource`, `Confidence` scoring
 - **Forensic correlation engine** — MFT↔USN matching, rename chain reconstruction, file history tracking
-- **Forensic CLI** — `recoverx forensic timeline <image>` with filtering and format options
-- **Fuzz testing** — 31 fuzz tests (NTFS, USN, LogFile) protecting binary parsers against corruption, loops, and malicious input
-- **Fuzz testing** — 31 fuzz tests protecting binary parsers against corruption, loops, and malicious input
+- **Forensic indexing engine** — SQLite persistence with schema management, WAL mode, transaction batching, LRU cache
+- **Forensic query engine** — simple forensic query language with AST parser and SQL translation
+- **Investigation case management** — create cases, bookmarks, saved queries, artifact tagging, notes
+- **Artifact abstraction layer** — `Artifact`, `FileArtifact`, `TimelineArtifact`, `DeletedArtifact`, `HashArtifact`
+- **Forensic reporting** — CSV, JSON, Markdown export, investigation summary reports
+- **Advanced correlation** — delete/recreate detection, timestamp anomaly, orphan reconstruction
+- **Forensic CLI** — `recoverx forensic timeline`, `search`, `query`, `export`, `summary`, `index`
+- **Fuzz testing** — 37 fuzz tests protecting binary parsers and query engine against corruption and malicious input
 - **Recovery validation** — precision, recovery rate, metadata integrity, and hash consistency measurements
 - **CI/CD automation** — GitHub Actions with matrix testing (3.10/3.11/3.12), linting, type checking, security scanning
 - **Static analysis** — `mypy` type checking + `bandit` security scanning
 - **Performance profiling** — `Profiler` context manager with CPU, RAM, throughput metrics, JSON export
-- **Testing suite** — 418 pytest tests across all core modules
+- **Testing suite** — 485 pytest tests across all core modules
 
 ## Installation
 
@@ -206,7 +211,26 @@ recoverx/
 │           │   ├── events.py    # Event factory functions
 │           │   ├── timeline.py  # Timeline builder, sort, filter, export
 │           │   ├── artifacts.py # Rename/deletion chains, activity summaries
-│           │   └── correlation.py # MFT↔USN matching, cross-source correlation
+│           │   ├── correlation.py # MFT↔USN matching, cross-source correlation
+│           │   └── reporting/   # CSV/JSON/Markdown export, summaries
+│           ├── artifacts/       # Artifact abstraction layer
+│           │   └── models.py    # Artifact, FileArtifact, DeletedArtifact, etc.
+│           ├── indexing/        # Forensic indexing engine
+│           │   ├── engine.py    # IndexEngine orchestrator
+│           │   ├── storage.py   # SQLite storage backend (WAL, search)
+│           │   ├── schema.py    # Schema management, migrations, integrity
+│           │   ├── cache.py     # Bounded LRU cache with hit tracking
+│           │   ├── transactions.py # Bulk insert batching
+│           │   └── models.py    # IndexConfig, IndexStats dataclasses
+│           ├── query/           # Forensic query engine
+│           │   ├── ast.py       # Query AST nodes
+│           │   ├── parser.py    # Query tokenizer and parser
+│           │   ├── operators.py # Operator enum (==, !=, >, <, ~, etc.)
+│           │   ├── filters.py   # AST-to-SQL filter builder
+│           │   └── engine.py    # Query execution engine
+│           ├── cases/           # Investigation workflows
+│           │   ├── models.py    # CaseMetadata, SavedQuery, Bookmark, TaggedArtifact
+│           │   └── cases.py     # CaseManager, Case (CRUD, bookmarks, tags, notes)
 │           ├── filesystems/
 │           │   ├── __init__.py   # Filesystem registry (future plugin loading)
 │           │   ├── detector.py   # FAT/NTFS/ext4/exFAT detection
@@ -245,7 +269,8 @@ recoverx/
 │               ├── hash_database.py  # Persistent hash storage / dedup
 │               ├── benchmark.py      # ScanBenchmark (elapsed, MB/s)
 │               └── file_utils.py     # format_size helper
-├── tests/                        # pytest suite (418 tests)
+├── tests/                        # pytest suite (485 tests)
+│   ├── fuzz/                     # Query and binary parser fuzz tests
 ├── recovered/                    # Carved file output (gitignored)
 ├── logs/                         # Log files (gitignored)
 ├── signatures/                   # Format signature definitions
@@ -327,6 +352,11 @@ class PNGCarver(BaseCarver):
 | Forensic timeline engine | ✅ Done    |
 | Forensic event abstraction | ✅ Done  |
 | Forensic correlation     | ✅ Done    |
+| Forensic indexing engine | ✅ Done    |
+| Forensic query engine    | ✅ Done    |
+| Case management          | ✅ Done    |
+| Artifact abstraction     | ✅ Done    |
+| Forensic reporting       | ✅ Done    |
 | SSD/TRIM awareness       | 🔜 Planned |
 | ReFS / APFS support  | 🔜 Planned |
 | GUI (optional)       | 🔜 Planned |

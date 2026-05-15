@@ -150,4 +150,4 @@ document — priorities shift based on community feedback and real-world testing
 
 ---
 
-_Last updated: 2026-05-14_ (v0.7.0 completed)
+_Last updated: 2026-05-14_ (v0.7.5 completed)

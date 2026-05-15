@@ -27,7 +27,9 @@ def create_ntfs_image(
     try:
         result = subprocess.run(
             ["mkfs.ntfs", "--version"],
-            capture_output=True, text=True, timeout=5,
+            capture_output=True,
+            text=True,
+            timeout=5,
         )
         has_mkfs = result.returncode == 0
     except (FileNotFoundError, subprocess.TimeoutExpired):
@@ -51,7 +53,9 @@ def _create_real_ntfs(
 
     subprocess.run(
         ["mkfs.ntfs", "-F", "-q", "-L", label, output_path],
-        check=True, capture_output=True, timeout=30,
+        check=True,
+        capture_output=True,
+        timeout=30,
     )
 
     for name, data in files:
@@ -63,18 +67,22 @@ def _create_real_ntfs(
 def _write_file_to_ntfs(image_path: str, name: str, data: bytes) -> None:
     try:
         import tempfile
+
         tmpdir = tempfile.mkdtemp()
         subprocess.run(
             ["mount", "-o", "loop,ro", image_path, tmpdir],
-            capture_output=True, timeout=10,
+            capture_output=True,
+            timeout=10,
         )
         subprocess.run(
             ["cp", "/dev/null", f"{tmpdir}/{name}"],
-            capture_output=True, timeout=10,
+            capture_output=True,
+            timeout=10,
         )
         subprocess.run(
             ["umount", tmpdir],
-            capture_output=True, timeout=10,
+            capture_output=True,
+            timeout=10,
         )
     except Exception:
         pass
