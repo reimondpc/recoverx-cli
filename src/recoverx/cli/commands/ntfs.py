@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import typer
 from rich.console import Console
@@ -9,7 +10,7 @@ from rich.table import Table
 
 from recoverx.core.filesystems.ntfs.boot_sector import parse_boot_sector, validate_boot_sector
 from recoverx.core.filesystems.ntfs.recovery import NTFSRecovery
-from recoverx.core.filesystems.ntfs.structures import NTFSBootSector
+from recoverx.core.filesystems.ntfs.structures import MFTRecord, NTFSBootSector, RecoveredNTFSFile
 from recoverx.core.utils.file_utils import format_size
 from recoverx.core.utils.raw_reader import RawReader
 
@@ -103,6 +104,27 @@ def resident(
     console = Console()
     _with_bpb(console, path, lambda reader, bpb: _recover_resident(
         console, reader, bpb, output, limit, json_output
+    ))
+
+
+@ntfs_app.command()
+def recover(
+    path: str = typer.Argument(..., help="Path to NTFS disk image or device."),
+    output: str = typer.Option("recovered", "--output", "-o", help="Output directory."),
+    limit: int = typer.Option(50, "--limit", "-n", help="Max files to recover."),
+    deleted_only: bool = typer.Option(False, "--deleted-only", help="Only recover deleted files."),
+    non_resident_only: bool = typer.Option(
+        False, "--non-resident-only", help="Only recover non-resident files."
+    ),
+    verify_hashes: bool = typer.Option(False, "--verify-hashes", help="Verify SHA-256 hashes."),
+    json_output: bool = typer.Option(False, "--json", help="Output as JSON."),
+    threads: int = typer.Option(1, "--threads", "-t", help="Worker threads (experimental)."),
+) -> None:
+    """Recover files from NTFS (resident and non-resident)."""
+    console = Console()
+    _with_bpb(console, path, lambda reader, bpb: _recover_files(
+        console, reader, bpb, output, limit,
+        deleted_only, non_resident_only, verify_hashes, json_output, threads,
     ))
 
 
@@ -229,3 +251,215 @@ def _recover_resident(
     if json_output:
         report = {"filesystem": bpb.to_dict(), "recovered_files": recovered_list}
         console.print(json.dumps(report, indent=2))
+
+
+def _recover_single_file(
+    path: str, bpb: NTFSBootSector, record: MFTRecord, output: str,
+) -> tuple[RecoveredNTFSFile, str] | None:
+    """Recover a single file with its own reader (thread-safe)."""
+    with RawReader(path) as reader:
+        ntfs = NTFSRecovery(reader, bpb)
+        if record.resident and record.data_resident:
+            result = ntfs.recover_resident_file(record)
+        elif record.has_non_resident_data:
+            result = ntfs.recover_non_resident_file(record)
+        else:
+            return None
+        if result.data:
+            saved_path = ntfs.save_recovered(result, output_dir=output)
+            return result, saved_path
+    return None
+
+
+def _recover_files(
+    console: Console, reader, bpb: NTFSBootSector,
+    output: str, limit: int,
+    deleted_only: bool, non_resident_only: bool,
+    verify_hashes: bool, json_output: bool, threads: int,
+) -> None:
+    rec = NTFSRecovery(reader, bpb)
+
+    all_records = rec.walk_mft(max_records=limit)
+    candidates = [r for r in all_records if not r.is_directory]
+
+    if deleted_only:
+        candidates = [r for r in candidates if r.is_deleted]
+    if non_resident_only:
+        candidates = [r for r in candidates if r.has_non_resident_data]
+    else:
+        candidates = [
+            r for r in candidates
+            if (r.resident and r.data_resident) or r.has_non_resident_data
+        ]
+
+    if not candidates:
+        console.print("[yellow]No recoverable files found.[/yellow]")
+        return
+
+    msg = f"[bold cyan]Recovering {len(candidates)} file(s)...[/bold cyan]"
+    console.print(msg)
+    console.print()
+
+    recovered_list: list[dict] = []
+
+    if threads > 1:
+        with ThreadPoolExecutor(max_workers=threads) as executor:
+            futures = {
+                executor.submit(
+                    _recover_single_file, reader.path, bpb, record, output,
+                ): record
+                for record in candidates
+            }
+            for future in as_completed(futures):
+                result_tuple = future.result()
+                if result_tuple:
+                    result, saved_path = result_tuple
+                    if not json_output:
+                        _print_recovery_result(console, result, saved_path)
+                    recovered_list.append(result.to_dict())
+                else:
+                    record = futures[future]
+                    if not json_output:
+                        console.print(
+                            f"  [yellow]SKIP[/yellow] {record.name or '?'} (no recoverable data)"
+                        )
+    else:
+        for record in candidates:
+            result_tuple = _recover_single_file(
+                reader.path, bpb, record, output,
+            )
+            if result_tuple:
+                result, saved_path = result_tuple
+                if not json_output:
+                    _print_recovery_result(console, result, saved_path)
+                recovered_list.append(result.to_dict())
+            else:
+                if not json_output:
+                    console.print(
+                        f"  [yellow]SKIP[/yellow] {record.name or '?'} (no recoverable data)"
+                    )
+
+    if json_output:
+        report = {
+            "filesystem": bpb.to_dict(),
+            "recovered_files": recovered_list,
+        }
+        console.print(json.dumps(report, indent=2))
+        return
+
+    console.print(
+        f"\n[bold green]Recovery complete:[/bold green] {len(recovered_list)} file(s)"
+    )
+
+
+def _print_recovery_result(console: Console, result, saved_path: str) -> None:
+    status_color = "[red]DELETED[/red]" if result.deleted else "[green]OK[/green]"
+    data_size = format_size(len(result.data))
+
+    if result.resident:
+        console.print(
+            f"  {status_color} {result.original_name} "
+            f"({data_size}) -> [cyan]{saved_path}[/cyan]"
+        )
+    else:
+        fragment_info = ""
+        if result.fragmented:
+            fragment_info = f" [yellow]({result.run_count} runs)[/yellow]"
+        sparse_tag = " [cyan][SPARSE][/cyan]" if result.sparse else ""
+
+        console.print(
+            f"  {status_color} {result.original_name} "
+            f"({data_size}){fragment_info}{sparse_tag} -> [cyan]{saved_path}[/cyan]"
+        )
+
+    if result.recovery_notes:
+        for note in result.recovery_notes:
+            console.print(f"       [dim]{note}[/dim]")
+
+
+@ntfs_app.command()
+def analyse(
+    path: str = typer.Argument(..., help="Path to NTFS disk image or device."),
+    record: int = typer.Option(0, "--record", "-r", help="MFT record number to analyse."),
+    json_output: bool = typer.Option(False, "--json", help="Output as JSON."),
+) -> None:
+    """Analyse non-resident runlists for a specific MFT record."""
+    console = Console()
+
+    with RawReader(path) as reader:
+        sector0 = reader.read_at(0, 512)
+        bpb = parse_boot_sector(sector0)
+        if bpb is None:
+            console.print("[red]Error:[/red] Not a valid NTFS boot sector.")
+            raise typer.Exit(code=1)
+
+        rec = NTFSRecovery(reader, bpb)
+        records = rec.walk_mft(max_records=record + 1 if record > 0 else 50)
+
+        target = None
+        for r in records:
+            if r.header.mft_record_number == record:
+                target = r
+                break
+
+        if target is None:
+            console.print(f"[red]MFT record {record} not found.[/red]")
+            raise typer.Exit(code=1)
+
+        analysis = rec.analyse_runs(target)
+
+        if json_output:
+            d = {
+                "mft_record": target.to_dict(),
+                "run_analysis": analysis,
+            }
+            console.print(json.dumps(d, indent=2))
+            return
+
+        if not analysis["has_runs"]:
+            console.print("[yellow]No non-resident data runs found.[/yellow]")
+            return
+
+        console.print(f"[bold cyan]Runlist Analysis — MFT Record {record}[/bold cyan]")
+        console.print(f"  File:          [yellow]{target.name}[/yellow]")
+        console.print(f"  Real Size:     {format_size(analysis['real_size'])}")
+        console.print(f"  Allocated:     {format_size(analysis['allocated_size'])}")
+        frag_str = "[red]Yes[/red]" if analysis["is_fragmented"] else "[green]No[/green]"
+        console.print(f"  Fragmented:    {frag_str}")
+        console.print(f"  Run Count:     {analysis['run_count']}")
+        sparse_str = "[cyan]Yes[/cyan]" if analysis["is_sparse"] else "[dim]No[/dim]"
+        console.print(f"  Sparse:        {sparse_str}")
+
+        if analysis["sparse_info"]:
+            si = analysis["sparse_info"]
+            console.print("\n  [bold cyan]Sparse Info:[/bold cyan]")
+            console.print(f"    Virtual Size:    {format_size(si['virtual_size'])}")
+            console.print(f"    Allocated Size:  {format_size(si['allocated_size'])}")
+            console.print(f"    Sparse Ratio:    {si['sparse_ratio']:.1%}")
+            console.print(f"    Sparse Clusters: {si['sparse_clusters']:,}")
+
+        recoverable = analysis["recoverable_bytes"]
+        lost = analysis["recoverable_lost"]
+        console.print(f"\n  [bold]Recoverable:[/bold] {format_size(recoverable)}")
+        if lost > 0:
+            console.print(f"  [red]Lost:[/red]         {format_size(lost)}")
+
+        if analysis["validation_issues"]:
+            console.print("\n  [bold yellow]Validation Issues:[/bold yellow]")
+            for issue in analysis["validation_issues"]:
+                color = "[red]" if issue["severity"] == "error" else "[yellow]"
+                console.print(f"    {color}[{issue['code']}][/] {issue['message']}")
+
+        console.print("\n  [bold]Data Runs:[/bold]")
+        for i, br in enumerate(analysis["byte_runs"]):
+            if br["is_sparse"]:
+                console.print(
+                    f"    Run {i}: VCN [{br['vcn_start']}-{br['vcn_end']}] "
+                    f"[cyan]SPARSE[/cyan] ({format_size(br['byte_length'])})"
+                )
+            else:
+                console.print(
+                    f"    Run {i}: VCN [{br['vcn_start']}-{br['vcn_end']}] "
+                    f"LCN {br['lcn']} ({format_size(br['byte_length'])}) "
+                    f"@ offset {format_size(br['byte_offset'])}"
+                )

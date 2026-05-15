@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.5] - 2026-05-14
+
+### Added
+
+- **Runlist execution engine** — `runlists/` subpackage with `DataRun` dataclass, `resolve_runlist()` (VCN→LCN translation, sparse detection), `vcn_to_lcn()`, `runs_to_byte_offsets()`, `decode_runlist_entry()`
+- **RunlistExecutor** — `execute()` (full data read), `execute_chunked()` (generator), `execute_sparse_aware()` (sparse-aware), `read_vcn_range()`, `read_clusters()`, `estimate_recoverable_bytes()`
+- **Sparse file support** — `SparseHandler` with virtual/allocated size calculation, sparse ratio, region counting; `is_sparse_runlist()`, `count_sparse_regions()`, `count_allocated_regions()`
+- **Runlist validation** — `validate_runlist()` (empty, VCN overlap, invalid LCN, LCN OOB, LCN overlap, impossible size, VCN exceeds total, zero cluster count), `check_circular_runs()`, `validate_data_run_integrity()`
+- **Fragmented NTFS recovery** — multi-run reconstruction, extent merging, ordered recovery, SHA-256 integrity hashing
+- **Deleted non-resident recovery** — recover files from deleted MFT records with non-resident DATA attributes; classification: recoverable / partially_recoverable / corrupted
+- **NTFS file recovery CLI** — `recoverx ntfs recover` with `--deleted-only`, `--non-resident-only`, `--output`, `--json`, `--verify-hashes`, `--threads` options; rich output with status, run count, sparse indicators
+- **NTFS analyse CLI** — `recoverx ntfs analyse --record N` for detailed runlist analysis (VCN/LCN mapping, fragmentation, sparse regions, validation issues, recoverable/lost bytes)
+- **Advanced JSON reporting** — runs, integrity, fragments, sparse info in recovery output
+- **MFT record enhancements** — `data_non_resident` field, `has_non_resident_data`, `is_fragmented` properties, `to_dict()` with non-resident details
+- **`is_sparse` fix** — `parse_runlist()` now correctly distinguishes sparse runs from real runs with zero relative offset
+
+### Infrastructure
+
+- 332 total pytest tests (48 new: 27 runlist/mapping/validation, 17 non-resident recovery, 4 fuzz)
+- Flake8, mypy (strict), bandit — all passing across 58 source files
+- Version bumped to 0.6.5
+
 ## [0.6.0] - 2026-05-14
 
 ### Added

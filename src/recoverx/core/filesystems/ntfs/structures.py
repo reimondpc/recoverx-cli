@@ -226,6 +226,7 @@ class MFTRecord:
     standard_info: StandardInformation | None = None
     file_name: FileNameAttribute | None = None
     data_resident: bytes | None = None
+    data_non_resident: NonResidentAttribute | None = None
     raw_data: bytes = b""
     resident: bool = True
 
@@ -241,8 +242,18 @@ class MFTRecord:
     def is_deleted(self) -> bool:
         return self.header.is_deleted
 
+    @property
+    def has_non_resident_data(self) -> bool:
+        return self.data_non_resident is not None
+
+    @property
+    def is_fragmented(self) -> bool:
+        if not self.data_non_resident:
+            return False
+        return len(self.data_non_resident.data_runs) > 1
+
     def to_dict(self) -> dict:
-        return {
+        d = {
             "header": self.header.to_dict(),
             "name": self.name,
             "is_directory": self.is_directory,
@@ -254,6 +265,19 @@ class MFTRecord:
             "attributes": [a.to_dict() for a in self.attributes],
             "data_length": len(self.data_resident) if self.data_resident else 0,
         }
+        if self.data_non_resident:
+            d["non_resident"] = {
+                "starting_vcn": self.data_non_resident.starting_vcn,
+                "last_vcn": self.data_non_resident.last_vcn,
+                "allocated_size": self.data_non_resident.allocated_size,
+                "real_size": self.data_non_resident.real_size,
+                "initialised_size": self.data_non_resident.initialised_size,
+                "data_runs": self.data_non_resident.data_runs,
+                "run_count": len(self.data_non_resident.data_runs),
+                "fragmented": len(self.data_non_resident.data_runs) > 1,
+                "compression_unit": self.data_non_resident.compression_unit,
+            }
+        return d
 
 
 @dataclass
@@ -271,11 +295,16 @@ class RecoveredNTFSFile:
     mft_modified: str | None = None
     accessed: str | None = None
     resident: bool = True
+    fragmented: bool = False
+    sparse: bool = False
+    run_count: int = 0
+    runs: list[dict] = field(default_factory=list)
+    integrity: dict = field(default_factory=dict)
     recovery_status: str = "recovered"
     recovery_notes: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
-        return {
+        d = {
             "name": self.original_name,
             "mft_record": self.mft_record,
             "deleted": self.deleted,
@@ -286,3 +315,10 @@ class RecoveredNTFSFile:
             "modified": self.modified,
             "recovery_status": self.recovery_status,
         }
+        if not self.resident:
+            d["fragmented"] = self.fragmented
+            d["sparse"] = self.sparse
+            d["run_count"] = self.run_count
+            d["runs"] = self.runs
+            d["integrity"] = self.integrity
+        return d

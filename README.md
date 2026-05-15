@@ -5,8 +5,8 @@
   </p>
   <p>
     <img src="https://img.shields.io/badge/python-3.10%20|%203.11%20|%203.12-blue?logo=python&logoColor=white" alt="Python 3.10+">
-    <img src="https://img.shields.io/badge/pytest-216%20passing-green?logo=pytest" alt="pytest 216 passing">
-    <img src="https://img.shields.io/badge/coverage-81%25-yellow?logo=codecov" alt="Coverage 81%">
+    <img src="https://img.shields.io/badge/pytest-332%20passing-green?logo=pytest" alt="pytest 332 passing">
+    <img src="https://img.shields.io/badge/coverage-83%25-yellow?logo=codecov" alt="Coverage 83%">
     <img src="https://img.shields.io/badge/code%20style-black-000000?logo=black" alt="Code style: black">
     <img src="https://img.shields.io/badge/CI-passing-brightgreen?logo=githubactions" alt="CI passing">
     <img src="https://img.shields.io/badge/license-MIT-yellow?logo=open-source-initiative" alt="MIT License">
@@ -51,13 +51,17 @@ signature.
 - **FAT32 CLI** — `recoverx fat32 info`, `list`, `deleted`, `recover` with `--json` output
 - **NTFS filesystem analysis** — boot sector parser, MFT record walker, attribute system (STANDARD_INFORMATION, FILE_NAME, DATA), resident data extraction
 - **NTFS deleted entry detection** — scan MFT for FILE records with IN_USE=0 flag
+- **NTFS non-resident DATA recovery** — runlist execution engine with VCN→LCN translation, fragmented file reconstruction, sparse file support
+- **NTFS runlist validation** — overlap detection, OOB protection, circular run detection, data integrity checks
+- **NTFS recovery CLI** — `recoverx ntfs recover` with `--deleted-only`, `--non-resident-only`, `--verify-hashes`, `--json`, threaded support
+- **NTFS analyse CLI** — `recoverx ntfs analyse --record N` for detailed runlist analysis with validation issues
 - **NTFS CLI** — `recoverx ntfs info`, `mft`, `deleted`, `resident` with `--json` output
-- **Fuzz testing** — 21 fuzz tests protecting binary parsers against corruption, loops, and malicious input
+- **Fuzz testing** — 25 fuzz tests protecting binary parsers against corruption, loops, and malicious input
 - **Recovery validation** — precision, recovery rate, metadata integrity, and hash consistency measurements
 - **CI/CD automation** — GitHub Actions with matrix testing (3.10/3.11/3.12), linting, type checking, security scanning
 - **Static analysis** — `mypy` type checking + `bandit` security scanning
 - **Performance profiling** — `Profiler` context manager with CPU, RAM, throughput metrics, JSON export
-- **Testing suite** — 277 pytest tests across all core modules
+- **Testing suite** — 332 pytest tests across all core modules
 
 ## Installation
 
@@ -202,7 +206,12 @@ recoverx/
 │           │       ├── attributes.py
 │           │       ├── recovery.py
 │           │       ├── structures.py
-│           │       └── constants.py
+│           │       ├── constants.py
+│           │       └── runlists/  # Runlist execution engine
+│           │           ├── mapping.py
+│           │           ├── executor.py
+│           │           ├── sparse.py
+│           │           └── validation.py
 │           └── utils/
 │               ├── raw_reader.py # Read-only binary reader (offset/sector)
 │               ├── logger.py     # Rich console + file dual logging
@@ -210,7 +219,7 @@ recoverx/
 │               ├── hash_database.py  # Persistent hash storage / dedup
 │               ├── benchmark.py      # ScanBenchmark (elapsed, MB/s)
 │               └── file_utils.py     # format_size helper
-├── tests/                        # pytest suite (187 tests)
+├── tests/                        # pytest suite (332 tests)
 ├── recovered/                    # Carved file output (gitignored)
 ├── logs/                         # Log files (gitignored)
 ├── signatures/                   # Format signature definitions
@@ -282,7 +291,11 @@ class PNGCarver(BaseCarver):
 | Performance profiling    | ✅ Done    |
 | Recovery validation      | ✅ Done    |
 | ZIP carving              | 🔜 Planned |
-| NTFS parsing             | 🔜 Planned |
+| NTFS parsing             | ✅ Done    |
+| NTFS non-resident recovery | ✅ Done  |
+| NTFS runlist engine      | ✅ Done    |
+| NTFS sparse file support | ✅ Done    |
+| NTFS deleted non-resident recovery | ✅ Done |
 | SSD/TRIM awareness       | 🔜 Planned |
 | ReFS / APFS support  | 🔜 Planned |
 | GUI (optional)       | 🔜 Planned |

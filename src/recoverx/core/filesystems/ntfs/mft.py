@@ -93,7 +93,12 @@ def parse_mft_record(data: bytes, record_size: int = 1024) -> MFTRecord | None:
 
     resident_data = b""
     for attr in attributes:
-        from .structures import ResidentAttribute, StandardInformation, FileNameAttribute
+        from .structures import (
+            ResidentAttribute,
+            StandardInformation,
+            FileNameAttribute,
+            NonResidentAttribute,
+        )
 
         if attr.attr_type == 0x10 and hasattr(attr, "data"):
             if len(attr.data) >= 72:
@@ -136,11 +141,12 @@ def parse_mft_record(data: bytes, record_size: int = 1024) -> MFTRecord | None:
                 except (struct.error, IndexError):
                     pass
 
-        elif attr.attr_type == 0x80 and hasattr(attr, "data"):
-            resident_data = attr.data
-            if isinstance(attr, ResidentAttribute):
+        elif attr.attr_type == 0x80:
+            if isinstance(attr, ResidentAttribute) and hasattr(attr, "data"):
+                resident_data = attr.data
                 record.resident = True
-            else:
+            elif isinstance(attr, NonResidentAttribute):
+                record.data_non_resident = attr
                 record.resident = False
 
     record.data_resident = resident_data

@@ -147,6 +147,7 @@ def parse_runlist(data: bytes, offset: int) -> list[dict]:
         for i in range(count_bytes):
             cluster_count |= data[pos + 1 + i] << (8 * i)
 
+        is_sparse = offset_bytes == 0
         cluster_offset = 0
         if offset_bytes > 0:
             raw_offset = 0
@@ -159,6 +160,7 @@ def parse_runlist(data: bytes, offset: int) -> list[dict]:
         runs.append({
             "cluster_count": cluster_count,
             "cluster_offset": cluster_offset,
+            "is_sparse": is_sparse,
         })
         pos += 1 + count_bytes + offset_bytes
 

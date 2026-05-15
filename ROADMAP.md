@@ -86,6 +86,19 @@ document — priorities shift based on community feedback and real-world testing
 - [ ] **Unallocated space extraction** — carve only gaps between allocated files
 - [ ] **File system metadata reporting** — timestamps, permissions, paths
 
+## v0.6.5 — Non-Resident & Fragmented NTFS Recovery ✅
+
+- [x] **Runlist execution engine** — `DataRun` dataclass, `resolve_runlist()` VCN→LCN translation, `runs_to_byte_offsets()`
+- [x] **RunlistExecutor** — full/chunked/sparse-aware data reading from disk image
+- [x] **Sparse file support** — `SparseHandler`, virtual/allocated sizing, zero-fill regions
+- [x] **Runlist validation** — overlap detection, OOB protection, circular run detection
+- [x] **Fragmented NTFS recovery** — multi-run reconstruction, extent merging, SHA-256 integrity
+- [x] **Deleted non-resident recovery** — classification (recoverable / partially_recoverable / corrupted)
+- [x] **NTFS recovery CLI** — `recoverx ntfs recover` with rich output and JSON reporting
+- [x] **Runlist analysis CLI** — `recoverx ntfs analyse --record N` with VCN/LCN/sparse/validation details
+- [x] **MFT record enhancements** — `has_non_resident_data`, `is_fragmented`, `data_non_resident`
+- [x] **332 tests** — flake8 / mypy / bandit clean (58 source files)
+
 ## v0.7.0 — Fragmented & Advanced Recovery 🔜
 
 - [ ] **Bifragment gap carving** — locate header and footer with known gap
@@ -124,4 +137,4 @@ document — priorities shift based on community feedback and real-world testing
 
 ---
 
-_Last updated: 2026-05-14_
+_Last updated: 2026-05-14_ (v0.6.5 completed)

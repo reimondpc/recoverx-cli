@@ -17,6 +17,13 @@ from recoverx.core.filesystems.ntfs.mft import (
     parse_mft_record, parse_mft_record_header, apply_fixups,
 )
 from recoverx.core.filesystems.ntfs.structures import NTFSBootSector
+from recoverx.core.filesystems.ntfs.runlists.mapping import (
+    resolve_runlist, vcn_to_lcn, DataRun,
+)
+from recoverx.core.filesystems.ntfs.runlists.validation import (
+    validate_runlist, check_circular_runs,
+)
+from recoverx.core.filesystems.ntfs.runlists.sparse import SparseHandler
 
 
 class TestNTFSFuzzBootSector:
@@ -198,3 +205,87 @@ class TestNTFSFuzzRecovery:
             assert isinstance(records, list)
         except (ValueError, IndexError, struct.error, MemoryError):
             pass
+
+
+class TestNTFSFuzzRunlists:
+    def test_fuzz_random_runlist_data(self):
+        for _ in range(100):
+            data = os.urandom(random.randint(1, 1024))
+            runs = parse_runlist(data, 0)
+            assert isinstance(runs, list)
+            if runs:
+                resolved = resolve_runlist(runs, None)
+                assert isinstance(resolved, list)
+
+    def test_fuzz_invalid_vcns(self):
+        for _ in range(50):
+            data = os.urandom(random.randint(1, 256))
+            runs = parse_runlist(data, 0)
+            if runs:
+                for vcn in [-1, -100, 2**63]:
+                    result_lcn = vcn_to_lcn(vcn, resolve_runlist(runs, None))
+                    assert isinstance(result_lcn, int)
+
+    def test_fuzz_negative_offsets(self):
+        for _ in range(50):
+            data = bytearray(os.urandom(random.randint(4, 128)))
+            data[0] = random.randint(0x10, 0xFF)
+            runs = parse_runlist(bytes(data), 0)
+            assert isinstance(runs, list)
+
+    def test_fuzz_circular_runlist(self):
+        for _ in range(50):
+            runs: list[dict] = []
+            lcn = 100
+            for _ in range(random.randint(2, 20)):
+                runs.append({
+                    "cluster_count": random.randint(1, 10),
+                    "cluster_offset": random.choice([-5, -3, -1, 0, 1, 3, 5, 10, 100, -100]),
+                })
+            resolved = []
+            current_lcn = 0
+            for r in runs:
+                current_lcn += r["cluster_offset"]
+                resolved.append(DataRun(
+                    vcn_start=0, vcn_end=r["cluster_count"] - 1,
+                    lcn=current_lcn, cluster_count=r["cluster_count"],
+                    is_sparse=r["cluster_offset"] == 0,
+                ))
+            issues = check_circular_runs(resolved)
+            assert isinstance(issues, list)
+
+    def test_fuzz_validation_extreme(self):
+        for _ in range(50):
+            runs = [DataRun(
+                vcn_start=random.randint(-1000, 1000),
+                vcn_end=random.randint(-1000, 1000),
+                lcn=random.randint(-1000000, 1000000),
+                cluster_count=random.randint(0, 1000000),
+                is_sparse=random.choice([True, False]),
+            ) for _ in range(random.randint(1, 10))]
+            issues = validate_runlist(runs, random.randint(0, 1000), random.randint(0, 10000))
+            assert isinstance(issues, list)
+
+    def test_fuzz_sparse_handler(self):
+        handler = SparseHandler(random.choice([256, 512, 1024, 4096]))
+        for _ in range(50):
+            runs = [DataRun(
+                vcn_start=0, vcn_end=random.randint(0, 100),
+                lcn=random.choice([-1, random.randint(0, 10000)]),
+                cluster_count=random.randint(1, 100),
+                is_sparse=random.choice([True, False]),
+            ) for _ in range(random.randint(1, 10))]
+            try:
+                desc = handler.describe(runs)
+                assert isinstance(desc, dict)
+            except (ZeroDivisionError, ValueError, OverflowError):
+                pass
+
+    def test_fuzz_zero_cluster_count_validation(self):
+        for _ in range(30):
+            runs = [DataRun(
+                vcn_start=0, vcn_end=-1, lcn=0,
+                cluster_count=0, is_sparse=False,
+            )]
+            issues = validate_runlist(runs, 0)
+            assert isinstance(issues, list)
