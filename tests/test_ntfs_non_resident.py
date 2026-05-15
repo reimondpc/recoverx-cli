@@ -308,7 +308,6 @@ class TestNonResidentRecovery:
 
 class TestNonResidentNTFSRecoveryWithImage:
     def test_recover_via_walk(self):
-        bpb = _make_bpb()
         with tempfile.NamedTemporaryFile(suffix=".img", delete=False) as f:
             sector = bytearray(512)
             sector[0:3] = b"\xeb\x52\x90"

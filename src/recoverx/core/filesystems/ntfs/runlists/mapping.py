@@ -73,7 +73,7 @@ def resolve_runlist(runs: list[dict], bpb) -> list[DataRun]:
     for raw_run in runs:
         cluster_count = raw_run["cluster_count"]
         cluster_offset = raw_run["cluster_offset"]
-        is_sparse = raw_run.get("is_sparse", cluster_offset == 0)
+        is_sparse = raw_run.get("is_sparse", False)
         if is_sparse:
             dr = DataRun(
                 vcn_start=current_vcn,

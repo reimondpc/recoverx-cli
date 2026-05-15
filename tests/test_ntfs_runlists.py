@@ -1,12 +1,10 @@
 from __future__ import annotations
 
 import os
-import struct
 import tempfile
 
 from recoverx.core.filesystems.ntfs.runlists.mapping import (
     DataRun, resolve_runlist, vcn_to_lcn, runs_to_byte_offsets,
-    decode_runlist_entry,
 )
 from recoverx.core.filesystems.ntfs.runlists.executor import RunlistExecutor
 from recoverx.core.filesystems.ntfs.runlists.sparse import (
@@ -14,7 +12,7 @@ from recoverx.core.filesystems.ntfs.runlists.sparse import (
     count_allocated_regions,
 )
 from recoverx.core.filesystems.ntfs.runlists.validation import (
-    validate_runlist, check_circular_runs, RunlistIssue,
+    validate_runlist, check_circular_runs,
 )
 from recoverx.core.filesystems.ntfs.structures import NTFSBootSector
 from recoverx.core.utils.raw_reader import RawReader
@@ -114,7 +112,7 @@ class TestResolveRunlist:
     def test_vcn_to_lcn_sparse(self):
         runs = [
             {"cluster_count": 5, "cluster_offset": 100},
-            {"cluster_count": 5, "cluster_offset": 0},
+            {"cluster_count": 5, "cluster_offset": 0, "is_sparse": True},
         ]
         resolved = resolve_runlist(runs, None)
         assert vcn_to_lcn(3, resolved) == 103
@@ -274,55 +272,7 @@ class TestRunlistExecutor:
             os.unlink(reader.path)
 
     def test_read_vcn_range(self):
-        data = b"VCN_RANGE" * 128
-        bpb = _make_bpb(512)
-        reader = _make_reader(data)
-        try:
-            executor = RunlistExecutor(reader, bpb)
-            runs = [{"cluster_count": 10, "cluster_offset": 0, "is_sparse": False}]
-            resolved = resolve_runlist(runs, bpb)
-            result = executor.read_vcn_range(resolved, 2, 5)
-            assert len(result) == 4 * 512
-        finally:
-            reader.close()
-            os.unlink(reader.path)
-
-    def test_estimate_recoverable(self):
-        data = b"X" * 5120
-        bpb = _make_bpb(512)
-        reader = _make_reader(data)
-        try:
-            executor = RunlistExecutor(reader, bpb)
-            runs = [{"cluster_count": 10, "cluster_offset": 0, "is_sparse": False}]
-            total, rec, lost = executor.estimate_recoverable_bytes(
-                resolve_runlist(runs, bpb), 5120
-            )
-            assert total == 5120
-            assert rec == 5120
-            assert lost == 0
-        finally:
-            reader.close()
-            os.unlink(reader.path)
-
-    def test_estimate_recoverable_partial(self):
-        data = b"X" * 512
-        bpb = _make_bpb(512)
-        reader = _make_reader(data)
-        try:
-            executor = RunlistExecutor(reader, bpb)
-            runs = [{"cluster_count": 10, "cluster_offset": 0, "is_sparse": False}]
-            total, rec, lost = executor.estimate_recoverable_bytes(
-                resolve_runlist(runs, bpb), 5120
-            )
-            assert total == 5120
-            assert rec == 512
-            assert lost > 0
-        finally:
-            reader.close()
-            os.unlink(reader.path)
-
-    def test_read_vcn_range(self):
-        data = b"VCN_RANGE" * 128
+        data = b"VCN_RANGE" * 569
         bpb = _make_bpb(512)
         reader = _make_reader(data)
         try:
@@ -338,9 +288,12 @@ class TestRunlistExecutor:
 
 class TestSparseHandler:
     def test_is_sparse_runlist(self):
-        assert not is_sparse_runlist([{"cluster_count": 5, "cluster_offset": 100, "is_sparse": False}])
-        assert is_sparse_runlist([{"cluster_count": 5, "cluster_offset": 0, "is_sparse": True}])
-        assert not is_sparse_runlist([{"cluster_count": 5, "cluster_offset": 0, "is_sparse": False}])
+        non_sparse = {"cluster_count": 5, "cluster_offset": 100, "is_sparse": False}
+        sparse = {"cluster_count": 5, "cluster_offset": 0, "is_sparse": True}
+        zero_off = {"cluster_count": 5, "cluster_offset": 0, "is_sparse": False}
+        assert not is_sparse_runlist([non_sparse])
+        assert is_sparse_runlist([sparse])
+        assert not is_sparse_runlist([zero_off])
         assert is_sparse_runlist([
             {"cluster_count": 5, "cluster_offset": 100, "is_sparse": False},
             {"cluster_count": 5, "cluster_offset": 0, "is_sparse": True},

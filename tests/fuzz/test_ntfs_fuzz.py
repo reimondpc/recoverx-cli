@@ -236,7 +236,6 @@ class TestNTFSFuzzRunlists:
     def test_fuzz_circular_runlist(self):
         for _ in range(50):
             runs: list[dict] = []
-            lcn = 100
             for _ in range(random.randint(2, 20)):
                 runs.append({
                     "cluster_count": random.randint(1, 10),
