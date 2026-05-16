@@ -34,6 +34,12 @@ class TestCLICommands:
         assert "--report" in out
         assert "--no-mmap" in out
         assert "--chunk-size" in out
+        assert "--quick" in out
+        assert "--max-size" in out
+        assert "--max-time" in out
+        assert "--output" in out
+        assert "--type" in out
+        assert "--live-findings" in out
 
     def test_devices_help(self):
         result = runner.invoke(app, ["devices", "--help"])
@@ -156,3 +162,64 @@ class TestCLICommands:
     def test_forensic_index_stats_missing_path(self):
         result = runner.invoke(app, ["forensic", "index-stats"])
         assert result.exit_code != 0
+
+
+class TestScanHelpers:
+    def test_parse_size(self):
+        from recoverx.cli.commands.scan import _parse_size
+
+        assert _parse_size("2GB") == 2 * 1024**3
+        assert _parse_size("500MB") == 500 * 1024**2
+        assert _parse_size("1KB") == 1024
+        assert _parse_size("1048576") == 1048576
+
+    def test_parse_time(self):
+        from recoverx.cli.commands.scan import _parse_time
+
+        assert _parse_time("5m") == 300.0
+        assert _parse_time("30s") == 30.0
+        assert _parse_time("1h") == 3600.0
+        assert _parse_time("90") == 90.0
+
+    def test_resolve_carvers(self):
+        from recoverx.cli.commands.scan import _resolve_carvers
+
+        carvers = _resolve_carvers("jpg,png")
+        assert len(carvers) == 2
+
+        carvers = _resolve_carvers(None)
+        assert len(carvers) == 5
+
+    def test_resolve_carvers_invalid(self):
+        import typer
+
+        from recoverx.cli.commands.scan import _resolve_carvers
+
+        try:
+            _resolve_carvers("invalid_format")
+            assert False, "should have raised"
+        except typer.BadParameter:
+            pass
+
+    def test_scan_progress(self):
+        from recoverx.core.scanning import ScanProgress
+
+        p = ScanProgress(1000)
+        assert p.total_bytes == 1000
+        assert p.scanned == 0
+        p.update(500)
+        assert p.scanned == 500
+        assert p.percentage == 50.0
+        p.add_finding("JPEG")
+        p.add_finding("JPEG")
+        p.add_finding("PNG")
+        assert p.findings_counts == {"JPEG": 2, "PNG": 1}
+
+    def test_scan_interrupt_handler(self):
+        from recoverx.core.scanning import InterruptHandler
+
+        h = InterruptHandler()
+        assert not h.interrupted
+        h.install()
+        h.restore()
+        assert not h.interrupted

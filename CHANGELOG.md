@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.2] - 2026-05-15
+
+### Added
+
+- **Professional Progress Engine** — `ScanProgress` tracks scanned bytes, percentage, throughput (MB/s), elapsed time, ETA, active threads, and findings count by type. Thread-safe counters with low overhead. Live Rich-based display with 250ms refresh rate. TTY/non-TTY fallback.
+- **Quick Scan Mode** (`--quick`) — targets high-probability regions first: boot sector + first 1 MB, trailing 10 MB, MFT region (if NTFS detected), then remaining space. Configurable via `ScanStrategy` abstraction.
+- **Scan Limits** (`--max-size`, `--max-time`) — limit scan to a maximum number of bytes or duration. Graceful stop with partial results preserved.
+- **Graceful Interruptions** — `InterruptHandler` catches CTRL+C / `KeyboardInterrupt`, signals workers to stop safely, preserves recovered files, and prints a partial summary. Second CTRL+C forces exit.
+- **Live Findings Preview** (`--live-findings` / `-L`) — real-time display of discovered files during scan with rate-limited, thread-safe output.
+- **Output Directory Support** (`--output` / `-o`) — specify custom output directory for recovered files. Auto-creates directory, preserves recovered filenames with collision-safe naming.
+- **Smart Type Filtering** (`--type`) — activate only selected carvers (e.g. `--type jpg,png,pdf`). Uses registry-based filtering for performance improvement.
+
+### Infrastructure
+
+- New `core/scanning/` package with `ScanProgress`, `ScanStrategy` ABC, `FullScanStrategy`, `QuickScanStrategy`, `InterruptHandler`
+- CLI help text updated with all new options
+- Backward compatible — all existing commands and APIs unchanged
+- Version bumped to 0.8.2
+
 ## [0.8.1] - 2026-05-15
 
 ### Added

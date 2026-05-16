@@ -68,10 +68,56 @@ def scan(
         "-c",
         help="Scanner chunk size in MB.",
     ),
+    quick: bool = typer.Option(
+        False,
+        "--quick",
+        "-q",
+        help="Quick scan mode: prioritize MFT, boot sector, and tail regions.",
+    ),
+    max_size: str = typer.Option(
+        "",
+        "--max-size",
+        "-M",
+        help="Maximum bytes to scan (e.g. 500MB, 2GB).",
+    ),
+    max_time: str = typer.Option(
+        "",
+        "--max-time",
+        "-T",
+        help="Maximum scan duration (e.g. 30s, 5m, 1h).",
+    ),
+    output_dir: str = typer.Option(
+        "",
+        "--output",
+        "-o",
+        help="Output directory for recovered files.",
+    ),
+    type_filter: str = typer.Option(
+        None,
+        "--type",
+        help="File types to recover (comma-separated, e.g. jpg,png,pdf).",
+    ),
+    live_findings: bool = typer.Option(
+        False,
+        "--live-findings",
+        "-L",
+        help="Show live findings preview during scan.",
+    ),
 ) -> None:
     """Scan a disk image or device for recoverable files using signature-based carving."""
     scan_cmd.run(
-        console, path, threads=threads, report=report, no_mmap=no_mmap, chunk_size_mb=chunk_size_mb
+        console,
+        path,
+        threads=threads,
+        report=report,
+        no_mmap=no_mmap,
+        chunk_size_mb=chunk_size_mb,
+        quick=quick,
+        max_size=max_size,
+        max_time=max_time,
+        output_dir=output_dir,
+        type_filter=type_filter,
+        live_findings=live_findings,
     )
 
 

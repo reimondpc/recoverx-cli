@@ -139,6 +139,27 @@ document — priorities shift based on community feedback and real-world testing
 - [x] **954 tests** — flake8 / mypy / bandit clean (74 source files)
 - [x] **Version 0.8.0** — Release title: "Advanced Correlation & Distributed Forensics"
 
+## v0.8.1 — PyPI Distribution ✅
+
+- [x] **Trusted Publishing** — published via GitHub Actions with `pypa/gh-action-pypi-publish` and `id-token: write`
+- [x] **Open source governance** — `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`
+- [x] **Documentation** — quickstart, architecture, plugin dev, forensic workflows
+- [x] **Examples** — programmatic carving, timeline analysis, custom plugins, benchmarks
+- [x] **PyPI availability** — `pip install recoverx` works globally
+- [x] **975 tests** — all passing, backward compatible
+
+## v0.8.2 — UX, Performance & Real-World Scan Experience ✅
+
+- [x] **Professional Progress Engine** — `ScanProgress` with scanned/total, MB/s, ETA, findings by type, thread-safe, Rich live display
+- [x] **Quick Scan Mode** (`--quick`) — prioritises MFT, boot sector, tail regions via `QuickScanStrategy`
+- [x] **ScanStrategy abstraction** — `ScanStrategy` ABC with `FullScanStrategy` and `QuickScanStrategy`
+- [x] **Scan Limits** (`--max-size`, `--max-time`) — graceful stop with partial results preserved
+- [x] **Graceful Interruptions** — CTRL+C handling, safe worker shutdown, summary preserved
+- [x] **Live Findings Preview** (`--live-findings`) — real-time discoveries during scan
+- [x] **Output Directory** (`--output` / `-o`) — custom output dir with auto-creation
+- [x] **Smart Type Filtering** (`--type`) — activate only selected carvers (jpg,png,pdf, etc.)
+- [x] **981 tests** — flake8 / mypy / bandit clean, backward compatible
+
 ## v0.9.0 — SSD & Modern Hardware 🔬
 
 - [ ] **Research TRIM/unmap impact on carve success rates**

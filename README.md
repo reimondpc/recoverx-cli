@@ -43,6 +43,12 @@ signature.
 - **Memory-mapped scanner** — zero-copy reads with automatic fallback to streaming
 - **Multithreaded scanner** — parallel region-based scanning with `--threads` CLI flag
 - **Scan benchmarking** — elapsed time, MB/s, CPU%, RAM, files/min; exports to JSON
+- **Professional Progress Engine** — real-time progress tracking with scanned/total, throughput MB/s, ETA, active threads, findings by type; thread-safe counters with Rich live display
+- **Quick Scan Mode** (`--quick`) — prioritise MFT region, boot sector, and tail regions for faster results on large images
+- **Scan Limits** (`--max-size`, `--max-time`) — limit scan duration or byte count with graceful stop and partial results
+- **Graceful Interruptions** — CTRL+C handling preserves recovered files and prints partial summary
+- **Live Findings Preview** (`--live-findings`) — real-time file discoveries during scan
+- **Smart Type Filtering** (`--type`) — activate only selected carvers (jpg,png,pdf) for targeted recovery
 - **JSON forensic reports** — structured output usable in forensic pipelines (`--report report.json`)
 - **Filesystem detection** — automatic identification of FAT12/16/32, exFAT, NTFS, ext2/3/4
 - **Direct disk access** — `recoverx devices` lists connected disks; `recoverx scan /dev/sdX` reads raw devices (read-only)
